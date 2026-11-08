@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Générateur de requêtes API · Power BI</title>
+<style>
+:root{
+  --bg:#0F1E33; --panel:#162A45; --ink:#D4D4D4; --muted:#9DA8B8; --line:#2A3F5E;
+  --accent:#6BAED6; --accent-soft:#1C3A5C; --on-accent:#0B1A2E;
+  --code-bg:#0A1628; --code-ink:#D4D4D4; --code-muted:#8C9AB0;
+  --ok:#35C29A; --warn:#E69F00; --warn-soft:#3A2F17;
+  --f-ui:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-code:"Cascadia Code",Consolas,"SF Mono",Menlo,"Courier New",monospace;
+  --r:10px; color-scheme:dark;
+}
+*{box-sizing:border-box}
+a{color:#9ECAE1}a:visited{color:#C9B8E8}
+table{color:inherit;font-family:inherit;line-height:inherit}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+.wrap{max-width:1380px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.top{display:flex;flex-direction:column;gap:12px}
+h1{font-size:1.6rem;margin:0;text-wrap:balance}
+.toolnav{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
+.toolnav button,.toolnav .soon{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;text-align:left;font-size:1rem}
+.toolnav .sub{font-weight:400;color:var(--muted);font-size:.84rem}
+.toolnav button[aria-current="page"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--accent)}
+.btnlink{display:inline-block;font-size:.88rem;font-weight:600;border-radius:7px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)!important;padding:6px 11px;text-decoration:none}
+.btnlink:hover{filter:brightness(1.08)}
+.toolnav .soon{border:1px dashed var(--line);border-radius:7px;color:var(--muted);font-weight:600}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.panel h3{font-size:1rem;margin:0;display:flex;align-items:center;gap:8px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:.82rem;flex:none}
+.lead{margin:0;font-size:.95rem}
+.prereq{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.prereq>div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.prereq b{color:var(--accent)}
+.prereq p{margin:0;font-size:.9rem}
+label{display:flex;flex-direction:column;gap:3px;font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.02em}
+input[type=text],input[type=month],select{font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 8px;width:100%;min-width:0}
+input[type=text]:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input:disabled{opacity:.5}
+.mono{font-family:var(--f-code);font-size:.82rem}
+.main{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel.col{gap:10px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-size:.88rem;font-weight:600;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:4px 7px}
+button.ghost:hover{color:var(--ink);border-color:var(--line)}
+button.link{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 14px}
+.frow{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) auto auto;gap:8px;align-items:end}
+.frow label.check{font-size:.82rem;padding-bottom:7px;white-space:nowrap}
+@media (max-width:620px){.frow{grid-template-columns:minmax(0,1fr) auto auto}.frow label:nth-child(2){grid-column:1/-1;order:3}}
+.radios{display:flex;flex-direction:column;gap:6px}
+label.check{flex-direction:row;align-items:flex-start;gap:8px;font-size:.92rem;color:var(--ink);font-weight:400;letter-spacing:0}
+label.check input{width:16px;height:16px;flex:none;margin-top:3px}
+label.check small{display:block;color:var(--muted);font-size:.82rem}
+.sub-opts{margin-left:24px;display:flex;flex-direction:column;gap:8px}
+.note{font-size:.82rem;color:var(--muted);margin:0}
+.alert{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 10px;font-size:.85rem;font-weight:600}
+.okmsg{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);border-radius:8px;padding:8px 10px;font-size:.85rem;font-weight:600}
+.warnlist{display:flex;flex-direction:column;gap:6px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{border-radius:7px 7px 0 0;border-bottom-color:transparent}
+.tabs button[aria-selected=true]{background:var(--code-bg);color:var(--code-ink);border-color:var(--code-bg)}
+.out{position:sticky;top:calc(env(safe-area-inset-top,0px) + 10px)}
+@media (max-width:980px){.out{position:static}}
+.code{background:var(--code-bg);color:var(--code-ink);border-radius:0 var(--r) var(--r) var(--r);overflow:hidden}
+.code-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #1F2C47;color:var(--code-muted);font-size:.82rem}
+.code-bar select{background:#16233F;color:#fff;border-color:#2E4472;width:auto}
+.code pre{margin:0;padding:12px 14px;overflow:auto;max-height:64vh;font-family:var(--f-code);font-size:.76rem;line-height:1.5;white-space:pre}
+.fndesc{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:10px 14px;background:var(--accent-soft);color:var(--ink);font-size:.86rem;border-bottom:1px solid #1F2C47}
+.fndesc div{min-width:0;overflow-wrap:anywhere}
+.fndesc button{flex:none;background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.code-bar button{background:#22335A;border-color:#2E4472;color:#fff}
+.guide{padding:12px 14px;max-height:72vh;overflow:auto;font-size:.88rem}
+.guide table{width:100%;border-collapse:collapse;font-size:.85rem}
+.guide td,.guide th{border-bottom:1px solid #22335A;padding:6px;text-align:left;vertical-align:top}
+.guide th{color:var(--code-muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.guide code{font-family:var(--f-code);font-size:.78rem;color:#B9CCF2}
+.guide h3{font-size:.95rem;margin:14px 0 6px;color:#fff}
+.guide h3:first-child{margin-top:0}
+.guide ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.guide p{margin:4px 0}
+.guide .note{color:var(--code-muted)}
+.links{display:flex;flex-direction:column;gap:12px}
+.links a{color:#9CC0FF;overflow-wrap:anywhere;font-family:var(--f-code);font-size:.78rem}
+.howto{margin:0;padding:8px 12px;background:var(--accent-soft);border-radius:8px;font-size:.88rem}
+.howto ol{margin:4px 0 0;padding-left:20px}
+.dico{display:flex;flex-direction:column;gap:8px}
+.dico-scroll{overflow-x:auto}
+.dico table{width:100%;border-collapse:collapse;font-size:.86rem;min-width:420px}
+.dico th{text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);padding:5px 6px}
+.dico td{border-bottom:1px solid var(--line);padding:5px 6px;vertical-align:middle}
+.st-ok{color:var(--ok);font-weight:700}.st-no{color:var(--warn);font-weight:700}.st-na{color:var(--muted)}
+.codes{grid-column:1/-1;margin-top:-2px}
+.codes summary{font-size:.82rem;color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;max-height:170px;overflow:auto;padding:6px 0}
+.chips button{font-family:var(--f-code);font-size:.74rem;font-weight:400;padding:2px 7px;border-radius:999px}
+.chips button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.chips button span{font-family:var(--f-ui);color:var(--muted);margin-left:4px}
+.home{display:flex;flex-direction:column;gap:16px}
+.hero{display:flex;flex-direction:column;gap:10px;padding:22px 22px;border-left:5px solid var(--accent);background:#0A1628}
+.eyebrow{margin:0;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.hero .big{margin:0;font-size:1.25rem;font-weight:600;line-height:1.35;max-width:62ch}
+.sec-t{font-size:1.1rem;margin:0 0 4px}
+.fmap{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1.25fr) 56px minmax(0,1fr);align-items:stretch;margin-top:4px}
+.node{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0;background:var(--panel)}
+.node p{margin:0}
+.main-node{border-color:var(--accent);background:var(--accent-soft)}
+.tag{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.nt{font-weight:700;font-size:1.02rem}
+.arrow{position:relative;display:flex;align-items:center;justify-content:center}
+.arrow::before{content:"";position:absolute;left:6px;right:10px;top:50%;height:2px;background:var(--accent)}
+.arrow::after{content:"";position:absolute;right:4px;top:50%;transform:translateY(-50%);border:6px solid transparent;border-left:8px solid var(--accent);border-right:0}
+.arrow span{position:relative;top:-14px;font-size:.72rem;color:var(--muted);background:var(--panel);padding:0 3px}
+.mini{list-style:none;margin:2px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.mini li{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem}
+.res-t{border-collapse:collapse;font-family:var(--f-code);font-size:.74rem;width:100%;margin-top:4px}
+.res-t th{text-align:left;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:3px 4px}
+.res-t td{border-bottom:1px solid var(--line);padding:3px 4px}
+.res-t td:last-child,.res-t th:last-child{text-align:right}
+.cap{font-size:.75rem}
+@media (max-width:900px){.fmap{grid-template-columns:minmax(0,1fr)}.arrow{height:40px}.arrow::before{left:50%;right:auto;top:4px;bottom:10px;width:2px;height:auto}.arrow::after{left:50%;right:auto;top:auto;bottom:2px;transform:translateX(-50%);border:6px solid transparent;border-top:8px solid var(--accent);border-bottom:0}.arrow span{top:0;left:44px;position:relative}}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cards3 .panel{display:flex;flex-direction:column;gap:6px}
+.cards3 p{margin:0;font-size:.9rem}
+.credits{display:flex;flex-wrap:wrap;gap:6px 24px;font-size:.88rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.credits b{color:var(--ink)}
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ok);color:var(--on-accent);padding:8px 14px;border-radius:8px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Générateur de requêtes API pour Power BI</h1>
+    <nav class="toolnav" aria-label="API disponibles">
+      <button data-tool="home" aria-current="page">🏠 Accueil<span class="sub">Présentation et mode d'emploi</span></button>
+      <button data-tool="mel" aria-current="false">📊 Insee · API Melodi<span class="sub">Jeu + filtres + territoire → requête Power Query</span></button>
+      <div class="soon">＋ Autres API<span class="sub">Pas encore disponibles : seule l'API Melodi est prise en charge pour l'instant</span></div>
+    </nav>
+  </div>
+
+  <section id="view-home" class="home" aria-label="Accueil">
+    <div class="panel hero">
+      <p class="eyebrow">Power BI · données ouvertes</p>
+      <p class="big">Chargez des données ouvertes dans Power BI sans écrire une ligne de code à la main : vous choisissez, le générateur écrit la requête.</p>
+      <p class="lead">Pour l'instant, un seul service est pris en charge : l'<b>API Melodi de l'Insee</b> (recensement, état civil, revenus…). D'autres API pourront s'ajouter plus tard, chacune dans son onglet.</p>
+      <div class="bar"><button class="primary" data-goto="mel">Commencer avec l'API Melodi</button></div>
+    </div>
+
+    <div id="tuto" class="panel col">
+      <h3>Comment ça marche</h3>
+      <div class="fmap">
+        <div class="node">
+          <p class="tag">Source</p>
+          <p class="nt">Insee · API Melodi</p>
+          <p class="note">Les jeux de données publics : recensement, état civil, revenus… Chacun a un nom <span class="mono">DS_…</span> et un dictionnaire de codes.</p>
+        </div>
+        <div class="arrow" aria-hidden="true"><span>codes</span></div>
+        <div class="node main-node">
+          <p class="tag">Générateur de requêtes</p>
+          <p class="nt">Vous choisissez, il écrit la requête</p>
+          <ol class="mini">
+            <li><span class="num">1</span>Le jeu</li>
+            <li><span class="num">2</span>Le dictionnaire</li>
+            <li><span class="num">3</span>Les codes</li>
+            <li><span class="num">4</span>Le territoire</li>
+            <li><span class="num">5</span>Copier</li>
+          </ol>
+          <p class="note">Les erreurs sont signalées avant d'aller dans Power BI.</p>
+        </div>
+        <div class="arrow" aria-hidden="true"><span>requête</span></div>
+        <div class="node">
+          <p class="tag">Power BI Desktop</p>
+          <p class="nt">Une table prête à l'emploi</p>
+          <p class="note">Transformer les données › Nouvelle source › Requête vide › Éditeur avancé : coller.</p>
+          <table class="res-t" aria-label="Exemple de résultat">
+            <tr><th>CODE_GEO</th><th>TIME_PERIOD</th><th>Valeur</th></tr>
+            <tr><td>67</td><td>2026-01</td><td>555</td></tr>
+            <tr><td>67</td><td>2026-02</td><td>446</td></tr>
+            <tr><td>68</td><td>2026-01</td><td>366</td></tr>
+            <tr><td>68</td><td>2026-02</td><td>284</td></tr>
+          </table>
+          <p class="note cap">Exemple : décès des 85 ans ou plus (<span class="mono">DS_EC_DECES</span>).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel col">
+      <h3>Avant la première requête</h3>
+      <div class="prereq">
+        <div><p><b>Le plus simple : partir du modèle Power BI</b></p>
+          <p class="note">Le modèle <span class="mono">Modele_API_Melodi.pbit</span> contient déjà les 7 requêtes (fonctions Melodi v1.2 et v1.5, paramètres, référentiel des communes), avec leurs descriptions et un exemple. À l'ouverture, Power BI demande le millésime, les départements du périmètre et l'adresse de votre copie du référentiel.</p>
+          <div class="bar"><a class="btnlink" href="https://github.com/lolita-debug/generateur_api/raw/main/modele/Modele_API_Melodi.pbit">Télécharger le modèle Power BI (.pbit)</a></div></div>
+        <div><p><b>Pour un rapport existant : coller les 7 requêtes</b></p>
+          <p class="note">Les deux fonctions Melodi, le millésime du recensement, les départements du périmètre (67 et 68 par défaut), l'adresse du référentiel des communes, le référentiel lui-même et la liste des communes. Elles sont dans l'onglet « Fonctions » du générateur, à coller une fois par fichier, sans rien modifier.</p>
+          <p class="note">Dans les deux cas, <a href="https://github.com/lolita-debug/generateur_api/raw/main/referentiel/Referentiel_Geographique_2026.xlsx">télécharger le référentiel des communes (.xlsx)</a>, le déposer sur SharePoint ou OneDrive et mettre son adresse dans le paramètre <span class="mono">P_Chemin_Referentiel</span>.</p></div>
+        <div><p><b>Ce qui part sur Internet</b></p>
+          <p class="note">Rien au chargement de la page. Le bouton « Charger le dictionnaire ici » interroge l'API de l'Insee (api.insee.fr) ; l'onglet « Tester » ouvre une de ses adresses. Dans Power BI, les requêtes appellent api.insee.fr (sans compte ni clé) et lisent le référentiel à l'adresse de P_Chemin_Referentiel.</p></div>
+      </div>
+    </div>
+
+    <div class="credits">
+      <span>Conception : <b>lolita-debug</b>, avec l'assistance de <b>Claude</b> (Anthropic)</span>
+      <span>Données : Insee (API Melodi, Code officiel géographique 2026), Licence Ouverte 2.0</span>
+      <span>Version 1.0.0 du 8 novembre 2026 · fonctions Melodi v1.2 et v1.5 · licence MIT</span>
+    </div>
+  </section>
+
+  <section id="tool-mel" class="col" aria-label="Requête Melodi">
+    <div class="panel col">
+      <p class="lead">Écrit la requête Power Query qui charge un jeu Insee par l'API Melodi. Les guillemets, les listes <span class="mono">{ }</span> et les virgules sont posés pour vous. Le code produit est celui des fonctions <b>v1.5</b> : le filtre géographique est envoyé à l'API, sans téléchargement de la France entière ; un dépassement de la limite de 30 appels par minute déclenche une pause puis un nouvel essai ; une réponse vide déclenche une erreur explicite plutôt qu'une table vide.</p>
+      <div class="prereq">
+        <div><p><b>Partir du modèle Power BI, qui contient déjà les 7 requêtes</b></p>
+          <p class="note">Rien à coller : ouvrir <span class="mono">Modele_API_Melodi.pbit</span>, choisir le millésime, les départements et l'adresse de votre copie du référentiel, puis ajouter les requêtes écrites ici.</p>
+          <div class="bar"><a class="btnlink" href="https://github.com/lolita-debug/generateur_api/raw/main/modele/Modele_API_Melodi.pbit">Télécharger le modèle Power BI (.pbit)</a></div></div>
+        <div><p><b>Ou, pour un rapport existant : coller les 7 requêtes de l'onglet « Fonctions »</b></p>
+          <p class="note">Dans l'ordre, sans rien modifier : <span class="mono">fn_MelodiDico</span>, <span class="mono">fn_MelodiData</span>, <span class="mono">P_Millesime_RP</span>, <span class="mono">P_Departements_Perimetre</span>, <span class="mono">P_Chemin_Referentiel</span>, <span class="mono">DIM_Referentiel_Geographique</span>, puis <span class="mono">P_Communes_Perimetre</span>. Toutes les requêtes du générateur fonctionnent ensuite telles quelles.</p>
+          <div class="bar"><button id="go-fn">Voir et copier les 7 requêtes</button></div></div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="col">
+        <div class="panel col">
+          <h3><span class="num">1</span>Le jeu de données</h3>
+          <label for="mel-ex">Partir d'un exemple<select id="mel-ex">
+            <option value="">— choisir —</option>
+            <option value="fiche">Population 18-25 ans, communes du Bas-Rhin et du Haut-Rhin</option>
+            <option value="activite">Actifs occupés et chômeurs 18-25 ans, communes du Bas-Rhin et du Haut-Rhin</option>
+            <option value="vide">Requête vide</option>
+          </select></label>
+          <label for="mel-jeu">Nom du jeu (commence par DS_)<input type="text" id="mel-jeu" class="mono" spellcheck="false" autocomplete="off"></label>
+          <p class="note">Le nom se lit sur la fiche du jeu dans le <a href="https://catalogue-donnees.insee.fr" target="_blank" rel="noopener">catalogue des données Insee</a>.</p>
+          <div class="radios" role="radiogroup" aria-label="Millésime">
+            <label class="check"><input type="radio" name="per" value="param"><span>Millésime du paramètre <span class="mono">P_Millesime_RP</span><small>Recommandé pour le recensement : un seul réglage pour tout le rapport.</small></span></label>
+            <label class="check"><input type="radio" name="per" value="fixe"><span>Période(s) saisie(s)<small>Obligatoire pour un jeu hors recensement (Filosofi, état civil…) ou pour un autre millésime. Une année, des mois ou des jours, selon le jeu.</small></span></label>
+          </div>
+          <div id="per-codes"></div>
+          <div class="sub-opts" id="per-opts"><label for="mel-per">Période(s) TIME_PERIOD, séparées par des virgules<input type="text" id="mel-per" class="mono" spellcheck="false" autocomplete="off"></label>
+            <p class="note">Le format dépend du jeu : <span class="mono">2023</span> (année), <span class="mono">2025-03</span> (mois), <span class="mono">2025-03-15</span> (jour). Les codes existants se lisent dans le dictionnaire, variable TIME_PERIOD.</p>
+            <div class="grid2" style="align-items:end">
+              <label for="per-de">Plage de mois : du<input type="month" id="per-de"></label>
+              <label for="per-a">au (inclus)<input type="month" id="per-a"></label>
+              <button id="per-fill">Remplir la liste des mois</button>
+            </div></div>
+        </div>
+
+        <div class="panel col">
+          <h3><span class="num">2</span>Le dictionnaire : lire les codes</h3>
+          <p class="note">Avant d'écrire les filtres, charger le dictionnaire du jeu : il donne pour chaque variable (<span class="mono">VARIABLE</span>) la liste de ses codes (<span class="mono">CODE</span>) et leurs libellés.</p>
+          <label class="check"><input type="checkbox" id="mel-nogeo"><span>Masquer la variable GEO dans le dictionnaire<small>GEO liste tous les territoires de France : plusieurs dizaines de milliers de lignes inutiles ici.</small></span></label>
+          <div class="bar"><button class="primary" id="dico-load">Charger le dictionnaire ici</button><button id="go-dico">Requête Power Query du dictionnaire</button></div>
+          <div id="dico-box" class="dico"></div>
+        </div>
+
+        <div class="panel col">
+          <h3><span class="num">3</span>Les filtres</h3>
+          <p class="note">Une ligne par variable, avec les codes lus dans le dictionnaire. Plusieurs valeurs : les séparer par des virgules, la liste <span class="mono">{ }</span> est faite automatiquement. Le millésime et le territoire se règlent à part.</p>
+          <div id="mel-filters" class="col"></div>
+          <div class="bar"><button id="mel-add">Ajouter un filtre</button></div>
+        </div>
+
+        <div class="panel col">
+          <h3><span class="num">4</span>Le territoire (GEO)</h3>
+          <div class="radios" role="radiogroup" aria-label="Territoire">
+            <label class="check"><input type="radio" name="geo" value="perim"><span>Communes du périmètre : <span class="mono">P_Communes_Perimetre</span><small>Recommandé. Les communes existantes des départements choisis dans <span class="mono">P_Departements_Perimetre</span> (67 et 68 par défaut, soit 880 communes), interrogées par paquets de 250. Seulement pour un jeu publié à la commune : charger le dictionnaire (étape 2) pour le vérifier.</small></span></label>
+            <label class="check"><input type="radio" name="geo" value="liste"><span>Territoires précis<small>Quelques territoires d’un même niveau, saisis à la main : France, région, département, EPCI, commune, IRIS…</small></span></label>
+            <label class="check"><input type="radio" name="geo" value="aucun"><span>Aucun filtre géographique<small>Pour un petit jeu national ou départemental. Déconseillé sur un jeu communal : France entière, tous niveaux, pagination non fiable.</small></span></label>
+          </div>
+          <div class="sub-opts" id="geo-liste">
+            <div class="grid2">
+              <label for="mel-niv">Niveau<select id="mel-niv">
+                <option value="FRANCE">France (FRANCE)</option>
+                <option value="REG">Régions (REG)</option>
+                <option value="DEP">Départements (DEP)</option>
+                <option value="ARR">Arrondissements départementaux (ARR)</option>
+                <option value="EPCI">EPCI</option>
+                <option value="AAV2020">Aires d’attraction des villes (AAV2020)</option>
+                <option value="BV2022">Bassins de vie (BV2022)</option>
+                <option value="ZE2020">Zones d’emploi (ZE2020)</option>
+                <option value="UU2020">Unités urbaines (UU2020)</option>
+                <option value="COM">Communes (COM)</option>
+                <option value="ARM">Arrondissements municipaux (ARM)</option>
+                <option value="IRIS">IRIS (infracommunal)</option>
+              </select></label>
+              <label for="mel-geo">Codes (séparés par des virgules)<input type="text" id="mel-geo" class="mono" spellcheck="false" autocomplete="off"></label>
+            </div>
+            <p class="note" id="mel-geo-note"></p>
+            <p class="note" id="mel-geo-codes"></p>
+          </div>
+        </div>
+
+        <div class="panel col">
+          <h3><span class="num">5</span>La requête finale</h3>
+          <div class="radios" role="radiogroup" aria-label="Codes ou libellés">
+            <label class="check"><input type="radio" name="lib" value="0"><span>Codes + colonnes de libellés <span class="mono">LIB_…</span><small>Recommandé : les codes servent aux filtres et aux mesures, les libellés à l'affichage.</small></span></label>
+            <label class="check"><input type="radio" name="lib" value="1"><span>Libellés à la place des codes (3e argument <span class="mono">true</span>)<small>Pour un export ou une table de consultation.</small></span></label>
+          </div>
+          <label class="check"><input type="checkbox" id="mel-slim"><span>Garder seulement les colonnes utiles<small>Retire GEO, NIVEAU_GEO et les variables filtrées sur un seul code (« Colonne gardée » décochée à l’étape 3). Une variable du jeu absente de vos filtres reste visible : la filtrer (étape 3) avant toute somme, sinon ses lignes (ex. Femme, Homme, Total) s’additionnent.</small></span></label>
+          <div class="sub-opts" id="slim-opts"><label for="mel-cols">Pour les variables gardées<select id="mel-cols">
+            <option value="both">Code + libellé (ex. AGE et LIB_AGE)</option>
+            <option value="lib">Libellé seulement (ex. LIB_AGE)</option>
+            <option value="code">Code seulement (ex. AGE)</option>
+          </select></label><p class="note">Choisir les variables gardées avec « Colonne gardée » à l'étape 3 (cochée d'office quand il y a plusieurs codes).</p></div>
+          <label for="mel-nom">Nom de la requête<input type="text" id="mel-nom" class="mono" spellcheck="false" autocomplete="off" placeholder="FAIT_RP_Theme_Detail_Perimetre"></label>
+          <p class="note">Convention : <span class="mono">FAIT_&lt;SOURCE&gt;_&lt;Thème&gt;_&lt;Détail&gt;_&lt;Périmètre&gt;</span>, sans accent ni espace.</p>
+          <div class="bar"><button class="primary" id="go-data">Voir la requête de données</button></div>
+        </div>
+      </div>
+
+      <div class="col out">
+        <div class="tabs" role="tablist" id="mel-tabs">
+          <button role="tab" data-mtab="dico" aria-selected="false">① Dictionnaire</button>
+          <button role="tab" data-mtab="data" aria-selected="true">② Requête de données</button>
+          <button role="tab" data-mtab="test" aria-selected="false">Tester</button>
+          <button role="tab" data-mtab="fn" aria-selected="false">Fonctions</button>
+          <button role="tab" data-mtab="aide" aria-selected="false">Si ça plante</button>
+        </div>
+        <div class="code" id="mel-pane-code">
+          <div class="code-bar"><span id="mel-hint"></span><span class="bar"><select id="fn-pick" aria-label="Fonction à afficher" hidden></select><button id="mel-copy">Copier le code</button></span></div>
+          <div id="fn-desc" class="fndesc" hidden></div>
+          <pre id="mel-code" class="mono" tabindex="0"></pre>
+        </div>
+        <div class="code guide" id="mel-pane-guide" hidden></div>
+        <div id="mel-how" class="howto"></div>
+        <div id="mel-msgs" class="warnlist"></div>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="application/json" id="fn-code">{"fn_MelodiDico": "// ═══════════════════════════════════════════════════════════════\n// fn_MelodiDico — Récupération du dictionnaire d'un jeu Melodi\n// ───────────────────────────────────────────────────────────────\n// Renvoie la table de correspondance codes → libellés (français)\n// et, pour GEO, le niveau géographique de chaque territoire\n// de toutes les dimensions d'un jeu de données de l'API Melodi (Insee).\n// Dépassement de la limite Insee (erreur 429) : pause et nouvel essai.\n// Auteur : lolita-debug\n// ═══════════════════════════════════════════════════════════════\n\nlet\n\n// ─────────────────────────────────────────────────────────────\n// ÉTAPE 1 — IMPLÉMENTATION PURE\n// Logique métier uniquement. Aucune métadonnée ici.\n// ─────────────────────────────────────────────────────────────\n\n    fn_MelodiDico_impl = (\n        Jeu as nullable text\n    ) as table =>\n    let\n        // Structure de sortie de référence, renvoyée vide si le paramètre est absent\n        #\"Table vide de référence\" =\n            #table(\n                type table [VARIABLE = text, LIB_VARIABLE = text, CODE = text, LIBELLE = text, NIVEAU_GEO = text],\n                {}\n            ),\n\n        // Appel de l'API Melodi : URL de base statique, partie variable dans RelativePath\n        // Limite Insee de 30 appels par minute, partagée avec fn_MelodiData : une réponse 429\n        // déclenche une pause (20 s, puis 40 s, puis 60 s) et un nouvel essai, au plus 3 fois.\n        // IsRetry = true : la nouvelle tentative ignore la réponse 429 mise en cache.\n        #\"Réponse API Melodi lue\" =\n            let\n                Tentative = (Numero as number) =>\n                    let\n                        Reponse =\n                            Web.Contents(\n                                \"https://api.insee.fr\",\n                                [\n                                    RelativePath         = \"melodi/range/\" & Jeu,\n                                    ManualStatusHandling = {429},\n                                    IsRetry              = Numero > 0\n                                ]\n                            ),\n                        Statut = Value.Metadata(Reponse)[Response.Status]\n                    in\n                        if Statut <> 429 then Json.Document(Reponse)\n                        else if Numero < 3\n                        then Function.InvokeAfter(() => @Tentative(Numero + 1), #duration(0, 0, 0, 20 * (Numero + 1)))\n                        else error Error.Record(\n                                 \"API Melodi : trop d'appels\",\n                                 \"Limite de 30 appels par minute toujours atteinte après 3 nouvelles tentatives (dictionnaire du jeu \" & Jeu & \"). Attendre une minute puis actualiser.\"\n                             )\n            in\n                Tentative(0),\n\n        // La réponse est un record contenant la liste des dimensions :\n        // sélection du premier champ de type liste\n        #\"Liste des dimensions extraite\" =\n            if Value.Is(#\"Réponse API Melodi lue\", type list)\n            then #\"Réponse API Melodi lue\"\n            else List.First(\n                     List.Select(\n                         Record.FieldValues(#\"Réponse API Melodi lue\"),\n                         each Value.Is(_, type list)\n                     )\n                 ),\n\n        #\"Dimensions converties en table\" =\n            Table.FromList(\n                #\"Liste des dimensions extraite\",\n                Splitter.SplitByNothing(),\n                {\"Dimension\"}\n            ),\n\n        #\"Concept et modalités développés\" =\n            Table.ExpandRecordColumn(\n                #\"Dimensions converties en table\",\n                \"Dimension\",\n                {\"concept\", \"values\"}\n            ),\n\n        #\"Code de la variable ajouté\" =\n            Table.AddColumn(\n                #\"Concept et modalités développés\",\n                \"VARIABLE\",\n                each [concept][code],\n                type text\n            ),\n\n        #\"Libellé de la variable ajouté\" =\n            Table.AddColumn(\n                #\"Code de la variable ajouté\",\n                \"LIB_VARIABLE\",\n                each [concept][label][fr],\n                type text\n            ),\n\n        // Une ligne par modalité de chaque variable\n        #\"Une ligne par modalité\" =\n            Table.ExpandListColumn(\n                #\"Libellé de la variable ajouté\",\n                \"values\"\n            ),\n\n        // Garde-fou : une variable sans modalité produit une ligne à null\n        #\"Code de la modalité ajouté\" =\n            Table.AddColumn(\n                #\"Une ligne par modalité\",\n                \"CODE\",\n                each if [values] = null then null else Text.From([values][code]),\n                type text\n            ),\n\n        #\"Libellé de la modalité ajouté\" =\n            Table.AddColumn(\n                #\"Code de la modalité ajouté\",\n                \"LIBELLE\",\n                each if [values] = null then null else [values][label][fr],\n                type text\n            ),\n\n        // Variable GEO : niveau géographique de chaque territoire (champ type/code : COM, DEP, IRIS…)\n        // Autres variables : null\n        #\"Niveau géographique ajouté\" =\n            Table.AddColumn(\n                #\"Libellé de la modalité ajouté\",\n                \"NIVEAU_GEO\",\n                each\n                    let TypeLu = if [values] = null then null else Record.FieldOrDefault([values], \"type\", null)\n                    in  if TypeLu is record then Record.FieldOrDefault(TypeLu, \"code\", null) else null,\n                type text\n            ),\n\n        #\"Colonnes finales sélectionnées\" =\n            Table.SelectColumns(\n                #\"Niveau géographique ajouté\",\n                {\"VARIABLE\", \"LIB_VARIABLE\", \"CODE\", \"LIBELLE\", \"NIVEAU_GEO\"}\n            ),\n\n        // Paramètre absent ou vide : renvoi de la structure de référence sans appel à l'API\n        Resultat =\n            if Jeu = null or Text.Trim(Jeu) = \"\"\n            then #\"Table vide de référence\"\n            else #\"Colonnes finales sélectionnées\"\n    in\n        Resultat,\n\n// ─────────────────────────────────────────────────────────────\n// ÉTAPE 2 — EXPOSITION AVEC MÉTADONNÉES\n// Value.ReplaceType seul : Value.ReplaceMetadata est incompatible.\n// ─────────────────────────────────────────────────────────────\n\n    fn_MelodiDico =\n        Value.ReplaceType(\n            fn_MelodiDico_impl,\n            type function (\n\n            // ── Paramètre 1 — obligatoire ────────────────────────\n                Jeu as (type nullable text meta [\n                    Documentation.FieldCaption     = \"Nom du jeu de données Melodi\",\n                    Documentation.FieldDescription = \"Identifiant technique du jeu, commençant par DS_, tel qu'affiché sur la fiche du jeu dans le catalogue des données de l'Insee (catalogue-donnees.insee.fr).\",\n                    Documentation.SampleValues     = {\"DS_RP_EMPLOI_LR_PRINC\", \"DS_RP_POPULATION_PRINC\"}\n                ])\n\n            ) as table\n            meta [\n\n            // ── Interface graphique Power Query ───────────────────\n                Documentation.Name        = \"fn_MelodiDico — Récupération du dictionnaire d'un jeu Melodi\",\n                Documentation.Description = \"Renvoie la correspondance entre codes et libellés de toutes les dimensions d'un jeu de données de l'API Melodi (Insee).\",\n                Documentation.LongDescription =\n\"Objectif :\n- Obtenir, pour un jeu de données Melodi, la liste des variables et de leurs modalités avec leurs libellés en français.\n- Servir de table de traduction des codes (ex : Y15T24 → 15 à 24 ans) et d'aide au choix des filtres.\n\nMode d'emploi :\n1) Jeu : saisir l'identifiant du jeu (ex : DS_RP_EMPLOI_LR_PRINC).\n2) Cliquer sur Appeler.\n3) Une nouvelle requête apparaît dans Autres requêtes avec 5 colonnes : VARIABLE, LIB_VARIABLE, CODE, LIBELLE, NIVEAU_GEO.\n\nNotes :\n- Source : API Melodi de l'Insee, accès libre sans souscription, limite de 30 appels par minute. En cas de dépassement (erreur 429), pause puis nouvel essai, au plus 3 fois (20 s, 40 s, 60 s).\n- Paramètre vide ou null : renvoi d'une table vide avec les 5 colonnes, sans appel à l'API.\n- La dimension GEO liste les territoires publiés dans ce jeu, tous niveaux confondus (plusieurs dizaines de milliers de lignes pour un jeu communal). NIVEAU_GEO donne leur niveau (FRANCE, REG, DEP, EPCI, COM, IRIS…) : filtrer NIVEAU_GEO pour connaître les niveaux disponibles.\n- Libellés en français uniquement (champ label/fr de l'API).\",\n\n                Documentation.Examples = {\n                    [\n                        Description = \"Dictionnaire du jeu Emploi - population active au lieu de résidence (recensement).\",\n                        Code        = \"fn_MelodiDico(\"\"DS_RP_EMPLOI_LR_PRINC\"\")\",\n                        Result      = \"Table des variables (AGE, SEX, EMPSTA_ENQ, EDUC, GEO…) et de leurs modalités avec libellés.\"\n                    ]\n                },\n                Documentation.Author  = \"lolita-debug\",\n                Documentation.Version = \"1.2\"\n            ]\n        )\n\nin\n    fn_MelodiDico", "fn_MelodiData": "// ═══════════════════════════════════════════════════════════════\n// fn_MelodiData — Récupération des données d'un jeu Melodi\n// ───────────────────────────────────────────────────────────────\n// Renvoie les observations d'un jeu de données de l'API Melodi (Insee),\n// filtrées côté API (une ou plusieurs valeurs par dimension),\n// avec les libellés des dimensions (en remplacement des codes ou en\n// colonnes supplémentaires), le niveau géographique et le code\n// géographique isolés pour la jointure avec un référentiel.\n// Une liste géographique longue est interrogée par paquets.\n// Dépassement de la limite Insee (erreur 429) : pause et nouvel essai.\n// Aucune observation renvoyée : erreur explicite (jamais de table vide silencieuse).\n// Dépendance : fn_MelodiDico (requête du même nom obligatoire).\n// Auteur : lolita-debug\n// ═══════════════════════════════════════════════════════════════\n\nlet\n\n// ─────────────────────────────────────────────────────────────\n// ÉTAPE 1 — IMPLÉMENTATION PURE\n// Logique métier uniquement. Aucune métadonnée ici.\n// ─────────────────────────────────────────────────────────────\n\n    fn_MelodiData_impl = (\n        Jeu                      as nullable text,\n        optional Filtres         as nullable record,\n        optional RemplacerCodes  as nullable logical\n    ) as table =>\n    let\n        // Nombre maximal de territoires par appel lorsque GEO est une liste\n        // Valeur fixée pour limiter la longueur de l'URL et éviter la pagination\n        #\"Taille des paquets géographiques\" = 250,\n\n        // Structure de sortie minimale, renvoyée vide si aucune donnée n'est disponible\n        #\"Table vide de référence\" =\n            #table(\n                type table [GEO = text, Valeur = number, NIVEAU_GEO = text, CODE_GEO = text],\n                {}\n            ),\n\n        // Filtres absents : aucun filtre transmis à l'API (jeu complet)\n        #\"Filtres normalisés\" =\n            if Filtres = null then [] else Filtres,\n\n        // Option absente : libellés ajoutés en colonnes supplémentaires (comportement par défaut)\n        #\"Option de remplacement normalisée\" =\n            if RemplacerCodes = null then false else RemplacerCodes,\n\n        // Découpage du filtre GEO en paquets lorsqu'il s'agit d'une liste\n        // Chaque paquet produit un jeu de filtres complet (GEO remplacé par le paquet)\n        #\"Jeux de filtres par paquet\" =\n            let\n                ValeurGeo = Record.FieldOrDefault(#\"Filtres normalisés\", \"GEO\", null)\n            in\n                if Value.Is(ValeurGeo, type list)\n                then List.Transform(\n                         List.Split(ValeurGeo, #\"Taille des paquets géographiques\"),\n                         each #\"Filtres normalisés\" & [GEO = _]\n                     )\n                else {#\"Filtres normalisés\"},\n\n        // Appel d'une page de l'API : URL de base statique, parties variables dans RelativePath et Query\n        // Valeur de filtre texte = un paramètre ; valeur liste = paramètre répété (ex : AGE=Y18&AGE=Y19)\n        // Limite Insee de 30 appels par minute : une réponse 429 déclenche une pause\n        // (20 s, puis 40 s, puis 60 s) et un nouvel essai, au plus 3 fois.\n        // IsRetry = true : la nouvelle tentative ignore la réponse 429 mise en cache.\n        #\"Appel d'une page de l'API\" =\n            (FiltresAppel as record, NumeroPage as number) =>\n                let\n                    Tentative = (Numero as number) =>\n                        let\n                            Reponse =\n                                Web.Contents(\n                                    \"https://api.insee.fr\",\n                                    [\n                                        RelativePath         = \"melodi/data/\" & Jeu,\n                                        Query                = FiltresAppel & [ page = Text.From(NumeroPage) ],\n                                        ManualStatusHandling = {429},\n                                        IsRetry              = Numero > 0\n                                    ]\n                                ),\n                            Statut = Value.Metadata(Reponse)[Response.Status]\n                        in\n                            if Statut <> 429 then Json.Document(Reponse)\n                            else if Numero < 3\n                            then Function.InvokeAfter(() => @Tentative(Numero + 1), #duration(0, 0, 0, 20 * (Numero + 1)))\n                            else error Error.Record(\n                                     \"API Melodi : trop d'appels\",\n                                     \"Limite de 30 appels par minute toujours atteinte après 3 nouvelles tentatives. Réduire le périmètre ou ajouter des filtres.\"\n                                 )\n                in\n                    Tentative(0),\n\n        // Parcours des pages d'un jeu de filtres jusqu'à l'indicateur paging/isLast\n        // Constat empirique : paramètre page et champ isLast non vérifiés dans la documentation officielle\n        #\"Observations d'un jeu de filtres\" =\n            (FiltresAppel as record) as list =>\n                List.Combine(\n                    List.Generate(\n                        () => [Page = 1, Reponse = #\"Appel d'une page de l'API\"(FiltresAppel, 1)],\n                        each [Reponse] <> null,\n                        each [\n                            Page    = [Page] + 1,\n                            Reponse = if [Reponse][paging][isLast] = true\n                                      then null\n                                      else #\"Appel d'une page de l'API\"(FiltresAppel, [Page] + 1)\n                        ],\n                        each [Reponse][observations]\n                    )\n                ),\n\n        #\"Observations de toutes les pages réunies\" =\n            List.Combine(List.Transform(#\"Jeux de filtres par paquet\", #\"Observations d'un jeu de filtres\")),\n\n        #\"Observations converties en table\" =\n            Table.FromList(\n                #\"Observations de toutes les pages réunies\",\n                Splitter.SplitByNothing(),\n                {\"Observation\"}\n            ),\n\n        #\"Dimensions et mesures développées\" =\n            Table.ExpandRecordColumn(\n                #\"Observations converties en table\",\n                \"Observation\",\n                {\"dimensions\", \"measures\"}\n            ),\n\n        // Noms des dimensions lus sur la première observation\n        #\"Noms des dimensions identifiés\" =\n            Record.FieldNames(#\"Dimensions et mesures développées\"{0}[dimensions]),\n\n        #\"Une colonne par dimension\" =\n            Table.ExpandRecordColumn(\n                #\"Dimensions et mesures développées\",\n                \"dimensions\",\n                #\"Noms des dimensions identifiés\"\n            ),\n\n        // Valeur numérique : première mesure disponible, champ value\n        #\"Valeur extraite des mesures\" =\n            Table.AddColumn(\n                #\"Une colonne par dimension\",\n                \"Valeur\",\n                each if [measures] = null\n                     then null\n                     else Record.Field(\n                              Record.Field([measures], Record.FieldNames([measures]){0}),\n                              \"value\"\n                          ),\n                type number\n            ),\n\n        #\"Colonne des mesures supprimée\" =\n            Table.RemoveColumns(#\"Valeur extraite des mesures\", {\"measures\"}),\n\n        // Filet de sécurité : suppression des observations renvoyées en double par la pagination\n        #\"Doublons exacts supprimés\" =\n            Table.Distinct(#\"Colonne des mesures supprimée\"),\n\n        // Dictionnaire du jeu, sans doublon ni code vide, conservé en mémoire\n        // GEO écartée : jamais libellée ici, et jusqu'à des dizaines de milliers de codes (IRIS)\n        #\"Dictionnaire du jeu chargé\" =\n            Table.Buffer(\n                Table.Distinct(\n                    Table.SelectRows(fn_MelodiDico(Jeu), each [CODE] <> null and [VARIABLE] <> \"GEO\"),\n                    {\"VARIABLE\", \"CODE\"}\n                )\n            ),\n\n        // Table de recherche : clé \"VARIABLE|CODE\" → libellé\n        #\"Table de recherche des libellés construite\" =\n            Record.FromList(\n                #\"Dictionnaire du jeu chargé\"[LIBELLE],\n                List.Transform(\n                    Table.ToRecords(#\"Dictionnaire du jeu chargé\"),\n                    each [VARIABLE] & \"|\" & [CODE]\n                )\n            ),\n\n        // Dimensions à libeller : présentes dans les données et dans le dictionnaire, hors GEO et FREQ\n        // Les libellés géographiques proviennent du référentiel géographique (DIM_Referentiel_Geographique)\n        #\"Dimensions à libeller identifiées\" =\n            List.RemoveItems(\n                List.Intersect({\n                    #\"Noms des dimensions identifiés\",\n                    List.Distinct(#\"Dictionnaire du jeu chargé\"[VARIABLE])\n                }),\n                {\"GEO\", \"FREQ\"}\n            ),\n\n        // Option false : ajout d'une colonne LIB_<dimension> pour chaque dimension\n        #\"Libellés ajoutés en colonnes\" =\n            List.Accumulate(\n                #\"Dimensions à libeller identifiées\",\n                #\"Doublons exacts supprimés\",\n                (TableEnCours, Dimension) =>\n                    Table.AddColumn(\n                        TableEnCours,\n                        \"LIB_\" & Dimension,\n                        each\n                            let CodeLu = Record.Field(_, Dimension)\n                            in  if CodeLu = null\n                                then null\n                                else Record.FieldOrDefault(\n                                         #\"Table de recherche des libellés construite\",\n                                         Dimension & \"|\" & Text.From(CodeLu),\n                                         null\n                                     ),\n                        type text\n                    )\n            ),\n\n        // Option true : remplacement de chaque code par son libellé, code conservé si libellé absent\n        #\"Codes remplacés par les libellés\" =\n            Table.TransformColumns(\n                #\"Doublons exacts supprimés\",\n                List.Transform(\n                    #\"Dimensions à libeller identifiées\",\n                    (Dimension) =>\n                        {\n                            Dimension,\n                            each if _ = null\n                                 then null\n                                 else Record.FieldOrDefault(\n                                          #\"Table de recherche des libellés construite\",\n                                          Dimension & \"|\" & Text.From(_),\n                                          Text.From(_)\n                                      ),\n                            type text\n                        }\n                )\n            ),\n\n        #\"Libellés appliqués selon l'option\" =\n            if #\"Option de remplacement normalisée\" = true\n            then #\"Codes remplacés par les libellés\"\n            else #\"Libellés ajoutés en colonnes\",\n\n        // Niveau géographique : segment central de GEO (ex : \"2026-COM-67482\" → \"COM\")\n        #\"Niveau géographique isolé\" =\n            Table.AddColumn(\n                #\"Libellés appliqués selon l'option\",\n                \"NIVEAU_GEO\",\n                each\n                    let Segments = if [GEO] = null then {} else Text.Split([GEO], \"-\")\n                    in  if List.Count(Segments) >= 3 then Segments{1} else null,\n                type text\n            ),\n\n        // Code géographique seul : dernier segment de GEO (ex : \"2026-COM-67482\" → \"67482\")\n        #\"Code géographique isolé\" =\n            Table.AddColumn(\n                #\"Niveau géographique isolé\",\n                \"CODE_GEO\",\n                each if [GEO] = null then null else List.Last(Text.Split([GEO], \"-\")),\n                type text\n            ),\n\n        // Paramètre absent : renvoi de la structure minimale, sans appel à l'API\n        // Réponse sans observation : erreur explicite plutôt qu'une table vide passée inaperçue\n        Resultat =\n            if Jeu = null or Text.Trim(Jeu) = \"\"\n            then #\"Table vide de référence\"\n            else if List.IsEmpty(#\"Observations de toutes les pages réunies\")\n            then error Error.Record(\n                     \"API Melodi : aucune donnée\",\n                     \"Le jeu \" & Jeu & \" n'a renvoyé aucune observation avec ces filtres. Causes fréquentes : \"\n                     & \"jeu non publié au niveau géographique demandé (ex. jeu national ou départemental filtré sur des communes), \"\n                     & \"période TIME_PERIOD pas encore publiée, code de filtre absent du jeu, \"\n                     & \"ou liste GEO vide (P_Departements_Perimetre sans département reconnu). \"\n                     & \"Vérifier dans le générateur : dictionnaire (niveaux géographiques du jeu) et onglet Tester.\"\n                 )\n            else #\"Code géographique isolé\"\n    in\n        Resultat,\n\n// ─────────────────────────────────────────────────────────────\n// ÉTAPE 2 — EXPOSITION AVEC MÉTADONNÉES\n// Value.ReplaceType seul : Value.ReplaceMetadata est incompatible.\n// ─────────────────────────────────────────────────────────────\n\n    fn_MelodiData =\n        Value.ReplaceType(\n            fn_MelodiData_impl,\n            type function (\n\n            // ── Paramètre 1 — obligatoire ────────────────────────\n                Jeu as (type nullable text meta [\n                    Documentation.FieldCaption     = \"Nom du jeu de données Melodi\",\n                    Documentation.FieldDescription = \"Identifiant technique du jeu, commençant par DS_, tel qu'affiché sur la fiche du jeu dans le catalogue des données de l'Insee (catalogue-donnees.insee.fr).\",\n                    Documentation.SampleValues     = {\"DS_RP_TD_ACTIVITE_AGED_PRINC\", \"DS_RP_TD_POPULATION_AGESEX_PRINC\"}\n                ]),\n\n            // ── Paramètre 2 — optionnel ───────────────────────────\n                optional Filtres as (type nullable record meta [\n                    Documentation.FieldCaption     = \"Filtres transmis à l'API\",\n                    Documentation.FieldDescription = \"Record au format [VARIABLE = \"\"CODE\"\"] pour une valeur, ou [VARIABLE = {\"\"CODE1\"\", \"\"CODE2\"\"}] pour plusieurs valeurs. Filtre géographique au format NIVEAU-CODE (ex : \"\"COM-67482\"\"). Une liste GEO longue est interrogée par paquets de 250. null par défaut = aucun filtre, jeu complet téléchargé : déconseillé (pagination non fiable sur gros volume).\",\n                    Documentation.SampleValues     = {\"[TIME_PERIOD = \"\"2023\"\", SEX = \"\"_T\"\", GEO = {\"\"COM-67482\"\", \"\"COM-68224\"\"}]\"}\n                ]),\n\n            // ── Paramètre 3 — optionnel booléen ──────────────────\n                optional RemplacerCodes as (type nullable logical meta [\n                    Documentation.FieldCaption     = \"Remplacer les codes par les libellés\",\n                    Documentation.FieldDescription = \"true = chaque code est remplacé par son libellé dans sa propre colonne. false (défaut) = codes conservés et libellés ajoutés dans des colonnes LIB_<dimension>.\",\n                    Documentation.SampleValues     = {false, true}\n                ])\n\n            ) as table\n            meta [\n\n            // ── Interface graphique Power Query ───────────────────\n                Documentation.Name        = \"fn_MelodiData — Récupération des données d'un jeu Melodi\",\n                Documentation.Description = \"Renvoie les données filtrées d'un jeu de l'API Melodi (Insee), avec les libellés des dimensions, le niveau et le code géographiques isolés.\",\n                Documentation.LongDescription =\n\"Objectif :\n- Importer un jeu de données Insee directement depuis l'API Melodi, sans téléchargement de fichier.\n- Traduire les codes des dimensions en libellés, à partir du dictionnaire du jeu.\n- Isoler le niveau géographique (NIVEAU_GEO : COM, EPCI, DEP, AAV2020…) et le code géographique (CODE_GEO) pour la jointure avec le référentiel géographique (DIM_Referentiel_Geographique).\n\nMode d'emploi :\n1) Jeu : saisir l'identifiant du jeu (ex : DS_RP_TD_POPULATION_AGESEX_PRINC).\n2) Filtres : record au format [VARIABLE = \"\"CODE\"\"] ; pour plusieurs valeurs d'une même variable, fournir une liste : [AGE = {\"\"Y18\"\", \"\"Y19\"\"}]. Pour un périmètre de communes, fournir la liste GEO des communes (format COM-code). Codes lus dans fn_MelodiDico.\n3) RemplacerCodes : true pour afficher les libellés à la place des codes ; false ou vide pour ajouter des colonnes LIB_<dimension>.\n4) Cliquer sur Appeler.\n5) Une nouvelle requête apparaît dans Autres requêtes avec une ligne par observation.\n\nNotes :\n- Dépendance : la requête fn_MelodiDico doit exister sous ce nom exact.\n- Pagination non fiable sur gros volume (constat octobre 2026) : pages dupliquées et pages sautées lors d'une extraction France entière. Pour un périmètre communal, toujours fournir la liste GEO des communes plutôt que filtrer après téléchargement.\n- Liste GEO longue : découpage automatique en paquets de 250 territoires, un appel (ou quelques pages) par paquet.\n- Doublons exacts éventuels supprimés en filet de sécurité ; les pages sautées ne sont pas récupérables par ce moyen.\n- Filtres multiples : une liste produit un paramètre répété dans l'URL (AGE=Y18&AGE=Y19). Validé sur GEO et AGE. La syntaxe avec virgule n'est pas prise en compte par l'API.\n- Filtre géographique : valeurs exactes uniquement, sans opérateur « contient ».\n- Valeur nulle non publiée : un croisement sans effectif peut être absent des résultats (à traiter comme 0).\n- Limite Insee : 30 appels par minute ; un appel par paquet et par page. En cas de dépassement (erreur 429), pause puis nouvel essai, au plus 3 fois (20 s, 40 s, 60 s).\n- Les totaux (_T) et sous-totaux (ex : 1T2) figurent dans les mêmes colonnes que les détails : filtrer une modalité par dimension avant toute somme.\n- Valeurs décimales : estimations pondérées du recensement, à ne pas arrondir avant agrégation.\n- Jeu vide ou null : renvoi d'une table vide (GEO, Valeur, NIVEAU_GEO, CODE_GEO), sans appel à l'API.\n- Aucune observation renvoyée par l'API : erreur « API Melodi : aucune donnée » avec les causes probables (niveau géographique absent du jeu, période non publiée, code inexistant).\n- Niveaux géographiques : un jeu n'est publié qu'à certains niveaux (FRANCE, DEP, COM, IRIS…) ; filtrer GEO au niveau publié.\n- Mesure : seule la première mesure de chaque observation est conservée.\",\n\n                Documentation.Examples = {\n                    [\n                        Description = \"Population des 18 à 25 ans et population totale de deux communes, libellés à la place des codes.\",\n                        Code        = \"fn_MelodiData(\"\"DS_RP_TD_POPULATION_AGESEX_PRINC\"\", [TIME_PERIOD = \"\"2023\"\", SEX = \"\"_T\"\", AGE = {\"\"Y18\"\", \"\"Y19\"\", \"\"_T\"\"}, GEO = {\"\"COM-67482\"\", \"\"COM-68224\"\"}], true)\",\n                        Result      = \"Table des observations des deux communes : âge et sexe en libellés, Valeur, NIVEAU_GEO et CODE_GEO.\"\n                    ],\n                    [\n                        Description = \"Actifs occupés et chômeurs par âge détaillé, codes conservés.\",\n                        Code        = \"fn_MelodiData(\"\"DS_RP_TD_ACTIVITE_AGED_PRINC\"\", [TIME_PERIOD = \"\"2023\"\", SEX = \"\"_T\"\", EMPSTA_ENQ = {\"\"1\"\", \"\"2\"\"}, GEO = {\"\"COM-67482\"\"}])\",\n                        Result      = \"Table des observations : codes, colonnes LIB_<dimension>, Valeur, NIVEAU_GEO et CODE_GEO.\"\n                    ]\n                },\n                Documentation.Author  = \"lolita-debug\",\n                Documentation.Version = \"1.5\"\n            ]\n        )\n\nin\n    fn_MelodiData", "P_Millesime_RP": "// ═══════════════════════════════════════════════════════════════\n// P_Millesime_RP — Paramètre : millésime du recensement de la population\n// ───────────────────────────────────────────────────────────────\n// Valeur utilisée comme filtre TIME_PERIOD par toutes les requêtes\n// alimentées par l'API Melodi (recensement de la population).\n// Modification annuelle : Accueil → Gérer les paramètres, ou\n// paramètres du modèle sémantique dans le service Power BI.\n// Auteur : lolita-debug\n// ═══════════════════════════════════════════════════════════════\n\n\"2023\" meta [IsParameterQuery = true, Type = \"Text\", IsParameterQueryRequired = true]", "P_Departements_Perimetre": "// ═══════════════════════════════════════════════════════════════\n// P_Departements_Perimetre — Paramètre : départements du périmètre\n// ───────────────────────────────────────────────────────────────\n// Codes des départements dont les communes forment le périmètre\n// interrogé (requête P_Communes_Perimetre), séparés par des virgules.\n// Exemples : \"67,68\" (Alsace), \"2A,2B\" (Corse), \"971\" (Guadeloupe).\n// Vide : France entière, environ 35 000 communes et 140 paquets\n// d'appels à l'API (déconseillé, limite Insee de 30 appels par minute).\n// Modification : Accueil → Gérer les paramètres.\n// Auteur : lolita-debug\n// ═══════════════════════════════════════════════════════════════\n\n\"67,68\" meta [IsParameterQuery = true, Type = \"Text\", IsParameterQueryRequired = false]", "P_Chemin_Referentiel": "// ═══════════════════════════════════════════════════════════════\n// P_Chemin_Referentiel — Paramètre : adresse du référentiel géographique\n// ───────────────────────────────────────────────────────────────\n// Adresse web du classeur Referentiel_Geographique_2026.xlsx lu par\n// DIM_Referentiel_Geographique. Valeur d'exemple fictive : à remplacer.\n// Usage durable : copie du fichier sur SharePoint ou OneDrive (lien\n// direct vers le fichier .xlsx, sans « ?web=1 » ni lien de partage).\n// Essai rapide : copie publiée dans le dépôt GitHub du générateur,\n// https://raw.githubusercontent.com/lolita-debug/generateur_api/main/referentiel/Referentiel_Geographique_2026.xlsx\n// Fichier sur le poste : voir le commentaire de DIM_Referentiel_Geographique.\n// Modification : Accueil → Gérer les paramètres.\n// Auteur : lolita-debug\n// ═══════════════════════════════════════════════════════════════\n\n\"https://votre-tenant.sharepoint.com/sites/votre-site/Documents%20partages/Referentiel_Geographique_2026.xlsx\" meta [IsParameterQuery = true, Type = \"Text\", IsParameterQueryRequired = true]", "DIM_Referentiel_Geographique": "// ═══════════════════════════════════════════════════════════════\n// DIM_Referentiel_Geographique — Référentiel des communes françaises\n// ───────────────────────────────────────────────────────────────\n// Communes existant au 1er janvier 2026 et communes historiques\n// fusionnées depuis, avec département, région, EPCI, arrondissement,\n// canton-ville, aire d'attraction des villes 2020 et bassin de vie 2022.\n// Clé unique : « Code commune historique ».\n// Jointure : CODE_GEO (données Melodi) → « Code commune historique » :\n// une donnée publiée dans une géographie plus ancienne retrouve ainsi\n// sa commune actuelle.\n// Source : Insee, Code officiel géographique 2026, Licence Ouverte 2.0.\n// Adresse du fichier : paramètre P_Chemin_Referentiel (à renseigner).\n// Dépendance : P_Chemin_Referentiel.\n// Auteur : lolita-debug\n// ═══════════════════════════════════════════════════════════════\n\nlet\n    // Classeur du référentiel, lu à l'adresse du paramètre P_Chemin_Referentiel\n    // (SharePoint, OneDrive ou copie publiée sur GitHub).\n    // Fichier enregistré sur le poste : remplacer Web.Contents(P_Chemin_Referentiel)\n    // par File.Contents(\"C:\\chemin\\Referentiel_Geographique_2026.xlsx\").\n    #\"Classeur du référentiel lu\" =\n        Excel.Workbook(\n            Web.Contents(P_Chemin_Referentiel),\n            null,\n            true\n        ),\n\n    // Tableau Excel « Communes » (une ligne par commune historique)\n    #\"Tableau des communes\" =\n        #\"Classeur du référentiel lu\"{[Item = \"Communes\", Kind = \"Table\"]}[Data],\n\n    // Toutes les colonnes en texte : les codes gardent leurs zéros initiaux (« 01001 », « 2A004 »)\n    #\"Colonnes typées en texte\" =\n        Table.TransformColumnTypes(\n            #\"Tableau des communes\",\n            List.Transform(Table.ColumnNames(#\"Tableau des communes\"), each {_, type text})\n        )\nin\n    #\"Colonnes typées en texte\"", "P_Communes_Perimetre": "// ═══════════════════════════════════════════════════════════════\n// P_Communes_Perimetre — Codes géographiques des communes du périmètre\n// ───────────────────────────────────────────────────────────────\n// Liste des communes existantes des départements choisis dans\n// P_Departements_Perimetre, au format attendu par l'API Melodi\n// (ex : \"COM-67482\"). Utilisée comme filtre GEO par les requêtes\n// alimentées par l'API Melodi, qui l'interrogent par paquets de 250.\n// Dépendances : P_Departements_Perimetre, DIM_Referentiel_Geographique.\n// Auteur : lolita-debug\n// ═══════════════════════════════════════════════════════════════\n\nlet\n    // Départements saisis : \"67,68\" → {\"67\", \"68\"} ; vide → aucun filtre (France entière)\n    #\"Départements du périmètre\" =\n        List.Select(\n            List.Transform(\n                Text.Split(if P_Departements_Perimetre = null then \"\" else P_Departements_Perimetre, \",\"),\n                each Text.Upper(Text.Trim(_))\n            ),\n            each _ <> \"\"\n        ),\n\n    // Communes existantes uniquement (les communes historiques fusionnées sont écartées)\n    #\"Communes existantes du périmètre\" =\n        Table.SelectRows(\n            DIM_Referentiel_Geographique,\n            each [#\"Commune actuelle (Oui/Non)\"] = \"Oui\"\n                 and (List.IsEmpty(#\"Départements du périmètre\")\n                      or List.Contains(#\"Départements du périmètre\", [#\"Code département\"]))\n        ),\n\n    // Conversion au format géographique attendu par l'API (ex : \"COM-67482\")\n    #\"Codes géographiques construits\" =\n        List.Transform(\n            List.Distinct(#\"Communes existantes du périmètre\"[#\"Code commune actuelle\"]),\n            each \"COM-\" & _\n        )\nin\n    #\"Codes géographiques construits\""}</script>
+<script>
+const FN=JSON.parse(document.getElementById('fn-code').textContent);
+const FN_INFO={
+  fn_MelodiDico:{lib:'1 · fn_MelodiDico (v1.2)',dep:'Aucune dépendance.',desc:"Fonction : dictionnaire d'un jeu Melodi (Insee), codes et libellés de chaque variable, niveau géographique de chaque territoire (NIVEAU_GEO). Paramètre : nom du jeu (DS_…)."},
+  fn_MelodiData:{lib:'2 · fn_MelodiData (v1.5)',dep:'Appelle fn_MelodiDico : installer celle-ci avant.',desc:"Fonction : données d'un jeu Melodi (Insee), filtrées côté API, interrogées par paquets de 250 territoires, avec nouvel essai en cas de limite d'appels. Erreur explicite si aucune donnée. Paramètres : jeu, filtres, libellés à la place des codes."},
+  P_Millesime_RP:{lib:'3 · P_Millesime_RP (paramètre)',dep:'Paramètre texte « 2023 ». Aucune dépendance.',desc:"Paramètre : millésime du recensement de la population utilisé par les requêtes RP (ex. 2023)."},
+  P_Departements_Perimetre:{lib:'4 · P_Departements_Perimetre (paramètre)',dep:'Paramètre texte « 67,68 ». Vide = France entière (déconseillé).',desc:"Paramètre : codes des départements du périmètre, séparés par des virgules (ex. 67,68 ; 2A,2B). Vide : France entière, déconseillé."},
+  P_Chemin_Referentiel:{lib:'5 · P_Chemin_Referentiel (paramètre)',dep:'Paramètre texte : adresse web du référentiel. Valeur d\u2019exemple fictive : la remplacer par l\u2019adresse de votre copie (SharePoint, OneDrive) ou, pour un essai, par l\u2019adresse GitHub indiquée en commentaire.',desc:"Paramètre : adresse web du classeur Referentiel_Geographique_2026.xlsx (copie SharePoint ou OneDrive, lien direct vers le fichier). Essai rapide : https://raw.githubusercontent.com/lolita-debug/generateur_api/main/referentiel/Referentiel_Geographique_2026.xlsx"},
+  DIM_Referentiel_Geographique:{lib:'6 · DIM_Referentiel_Geographique (table)',dep:'Lit le classeur à l\u2019adresse de P_Chemin_Referentiel. Connexion : compte d\u2019organisation (SharePoint, OneDrive) ou Anonyme (GitHub).',desc:"Table : communes actuelles et historiques (Insee, COG 2026) avec leurs zonages. Clé : Code commune historique. Relier les données Melodi par CODE_GEO."},
+  P_Communes_Perimetre:{lib:'7 · P_Communes_Perimetre (liste)',dep:'Appelle P_Departements_Perimetre et DIM_Referentiel_Geographique.',desc:"Liste : codes COM-xxxxx des communes actuelles du périmètre, envoyés à l'API comme filtre GEO. Ne pas charger dans le modèle."}
+};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1600);}
+function copyAny(txt){
+  const done=()=>toast('Copié');
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('Copie impossible : sélectionner le texte');}ta.remove();};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(txt).then(done,fb);else fb();
+}
+
+/* =================== onglet Melodi =================== */
+const MKEY='generateur-api-melodi-v1';
+const MEL_EX={
+  fiche:{jeu:'DS_RP_TD_POPULATION_AGESEX_PRINC',perMode:'param',per:'2023',nogeo:true,slim:true,filters:[{v:'SEX',x:'_T'},{v:'AGE',x:'Y18, Y19, Y20, Y21, Y22, Y23, Y24, Y25, _T'}],geoMode:'perim',niv:'COM',geo:'67482, 68224',lib:false,nom:'FAIT_RP_Population_AgeDetaille_Alsace'},
+  activite:{jeu:'DS_RP_TD_ACTIVITE_AGED_PRINC',perMode:'param',per:'2023',nogeo:true,slim:true,filters:[{v:'SEX',x:'_T'},{v:'AGE',x:'Y18, Y19, Y20, Y21, Y22, Y23, Y24, Y25'},{v:'EMPSTA_ENQ',x:'1, 2'}],geoMode:'perim',niv:'COM',geo:'67482, 68224',lib:false,nom:'FAIT_RP_Activite_AgeDetaille_Alsace'},
+  vide:{jeu:'DS_',perMode:'param',per:'2023',nogeo:true,slim:true,filters:[{v:'',x:''}],geoMode:'perim',niv:'COM',geo:'',lib:false,nom:''}
+};
+const TEST_GEO=['COM-67482','COM-68224'];
+let M,mtab='data',fnSel='fn_MelodiDico';
+function melLoad(){try{const r=localStorage.getItem(MKEY);if(r){M=Object.assign(JSON.parse(JSON.stringify(MEL_EX.fiche)),JSON.parse(r));return;}}catch(e){}M=JSON.parse(JSON.stringify(MEL_EX.fiche));}
+function nomInit(){if(M.nomJeu===undefined)M.nomJeu=M.jeu;}
+function melSave(){try{localStorage.setItem(MKEY,JSON.stringify(M))}catch(e){}}
+const mStr=s=>'"'+s.replace(/"/g,'""')+'"';
+const mId=n=>/^[A-Za-z_][A-Za-z0-9_]*$/.test(n)?n:'#"'+n.replace(/"/g,'""')+'"';
+const vals=x=>(x||'').split(/[,;\s]+/).map(s=>s.replace(/^["'{]+|["'}]+$/g,'').trim()).filter(Boolean);
+function mVal(list,indent){
+  if(list.length===1)return mStr(list[0]);
+  const items=list.map(mStr);const one='{'+items.join(', ')+'}';
+  if(indent+one.length<=110)return one;
+  const rows=[];for(let i=0;i<items.length;i+=8)rows.push(items.slice(i,i+8).join(', '));
+  return '{'+rows.join(',\n'+' '.repeat(indent+1))+'}';
+}
+const GEO_RX={FRANCE:/^[A-Z]{1,3}$/,REG:/^\d{2}$/,DEP:/^(\d{2,3}|2[AB])$/,ARR:/^(\d{3,4}|2[AB]\d)$/,EPCI:/^\d{9}$/,AAV2020:/^[0-9A-Z]{3}$/,BV2022:/^(\d{5}|2[AB]\d{3})$/,ZE2020:/^\d{4}$/,UU2020:/^[0-9A-Z]{5}$/,COM:/^(\d{5}|2[AB]\d{3})$/,ARM:/^(75|69|13)\d{3}$/,IRIS:/^(\d{5}|2[AB]\d{3})\d{4}$/};
+const GEO_EX={FRANCE:'F pour la France (autre code : le lire dans le dictionnaire)',REG:'2 chiffres (ex. 44)',DEP:'2 ou 3 caractères (ex. 67, 2A, 974)',ARR:'3 ou 4 caractères (ex. 671)',EPCI:'9 chiffres (SIREN, ex. 246700488)',AAV2020:'3 caractères (ex. 001)',BV2022:'5 caractères (code de la commune-centre)',ZE2020:'4 chiffres',UU2020:'5 caractères (ex. 00851)',COM:'5 caractères (ex. 67482)',ARM:'5 chiffres (ex. 75101, 69381, 13201)',IRIS:'9 caractères : code commune + 4 chiffres (ex. 010530101)'};
+// Colonne du référentiel (une ligne par commune) portant le code de chaque niveau supracommunal
+const REF_COL={REG:'Code région',DEP:'Code département',ARR:'Code arrondissement',EPCI:'Code EPCI (SIREN)',AAV2020:'Code aire d’attraction des villes 2020',BV2022:'Code bassin de vie 2022'};
+// Niveaux géographiques présents dans le dictionnaire chargé (variable GEO)
+// Niveau lu dans le champ geoObject s'il existe, sinon dans le code (« 2026-COM-67482 » ou « COM-67482 »)
+function geoInfo(){
+  if(!dicoOk())return null;
+  if(DICO.geo)return DICO.geo;
+  const g=dicoMap().GEO;
+  if(!g){DICO.geo={none:true};return DICO.geo;}
+  const lv={};let unk=0;
+  g.vals.forEach(v=>{if(!v.lvl){unk++;return;}(lv[v.lvl]=lv[v.lvl]||new Set()).add(v.c);});
+  const yr=(g.vals.find(v=>v.yr)||{}).yr||null;
+  DICO.geo={none:false,lv:Object.keys(lv).length?lv:null,n:g.vals.length,unk,yr};return DICO.geo;
+}
+const lvTxt=lv=>Object.keys(lv).map(k=>`${k} (${lv[k].size})`).join(', ');
+function geoIsIris(){const GI=geoInfo();return M.geoMode==='liste'?M.niv==='IRIS':!!((GI&&GI.lv&&GI.lv.IRIS)||(!GI&&/_IRIS$/.test(M.jeu.trim())));}
+const irisPerim=()=>M.geoMode==='perim'&&geoIsIris();
+function geoList(){return vals(M.geo).map(g=>g.toUpperCase().replace(/^[A-Z0-9]+-/,''));}
+function melModel(){
+  const errs=[],warns=[],entries=[];
+  const jeu=M.jeu.trim();
+  if(!/^DS_[A-Z0-9_]+$/.test(jeu))errs.push('Nom du jeu : il commence par DS_ et ne contient que des majuscules, chiffres et _ (le copier depuis le catalogue).');
+  if(M.perMode==='param'){entries.push(['TIME_PERIOD',{raw:'P_Millesime_RP'}]);if(jeu&&!/^DS_RP_/.test(jeu)&&jeu!=='DS_')warns.push('P_Millesime_RP est une année du recensement (ex. 2023). Ce jeu n’est pas un jeu RP : ses périodes peuvent être des mois ou des jours (ex. 2026-01). Choisir « Période(s) saisie(s) » et copier les codes TIME_PERIOD du dictionnaire.');}
+  else{const per=vals(M.per);if(per.length)entries.push(['TIME_PERIOD',per]);else warns.push('Pas de période : toutes les périodes du jeu seront chargées (beaucoup plus de données).');
+    const fq=M.filters.some(f=>f.v.trim().toUpperCase()==='FREQ'&&vals(f.x).length);
+    if(!fq&&per.some(p=>/^\d{4}-\d{2}$/.test(p)))warns.push('Périodes au mois : si le dictionnaire contient la variable FREQ, ajouter le filtre FREQ = M (sinon des valeurs journalières peuvent s’ajouter aux mensuelles).');
+    if(!fq&&per.some(p=>/^\d{4}-\d{2}-\d{2}$/.test(p)))warns.push('Périodes au jour : si le dictionnaire contient la variable FREQ, ajouter le filtre FREQ = D.');}
+  M.filters.forEach((f,i)=>{const v=f.v.trim().toUpperCase(),x=vals(f.x);if(!v&&!x.length)return;
+    if(!/^[A-Z0-9_]+$/.test(v)){errs.push(`Filtre ${i+1} : nom de variable manquant ou invalide (ex. AGE, SEX).`);return;}
+    if(v==='GEO'||v==='TIME_PERIOD'){errs.push(`${v} se règle ${v==='GEO'?'à l’étape 4':'à l’étape 1'}, pas dans les filtres.`);return;}
+    if(!x.length){errs.push(`Filtre ${v} : aucune valeur.`);return;}
+    if(x.length>1&&x.includes('_T'))warns.push(`${v} contient le total _T et des détails : dans les mesures, ne jamais sommer _T avec les détails (double compte). Garder _T seulement s’il sert de dénominateur.`);
+    if(x.some(c=>/^\d+T\d+$/.test(c))&&x.length>1)warns.push(`${v} contient un sous-total (${x.filter(c=>/^\d+T\d+$/.test(c)).join(', ')}) et d'autres modalités : risque de double compte.`);
+    entries.push([v,x]);});
+  const GI=geoInfo(),LV=GI&&GI.lv;
+  if(GI&&GI.none&&M.geoMode!=='aucun')errs.push('Ce jeu n’a pas de variable GEO : choisir « Aucun filtre géographique » à l’étape 4.');
+  if(M.geoMode==='perim'){entries.push(['GEO',{raw:'P_Communes_Perimetre'}]);
+    if(LV&&!LV.COM){const sug=['DEP','REG','FRANCE'].filter(k=>LV[k]);
+      errs.push(`Ce jeu n’est pas publié à la commune (niveaux disponibles : ${lvTxt(LV)}). « Communes du périmètre » renverrait une table vide. Choisir « Territoires précis »${sug.length?` au niveau ${sug.join(' ou ')}${LV.FRANCE?' (code F pour la France)':''}`:''}${LV.IRIS?', ou le niveau IRIS':''}.`);}
+    else if(irisPerim())warns.push('Jeu IRIS : le périmètre devient la liste des IRIS des communes du périmètre, plus les communes non découpées en IRIS, lue dans le dictionnaire du jeu par la requête. Paris, Lyon et Marseille : leurs IRIS dépendent des arrondissements municipaux et ne sont pas couverts.');
+    else if(GI&&!GI.none&&!LV)warns.push('Niveaux géographiques non reconnus dans le dictionnaire : vérifier dans l’onglet Métadonnées du catalogue Insee (« Maille(s) géographique(s) ») que le jeu existe au niveau commune, sinon la table sera vide.');
+    else if(!GI)warns.push('Dictionnaire non chargé (étape 2) : impossible de vérifier que ce jeu est publié à la commune. Un jeu publié seulement au niveau national ou départemental ferait échouer la requête (erreur « aucune donnée »).');
+  }
+  else if(M.geoMode==='liste'){
+    const g=geoList();
+    if(!g.length)errs.push('Territoires précis : saisir au moins un code.');
+    if(LV&&!LV[M.niv])errs.push(`Niveau ${M.niv} absent de ce jeu (niveaux disponibles : ${lvTxt(LV)}).`);
+    else if(LV){const bad=g.filter(c=>!LV[M.niv].has(c));if(bad.length)errs.push(`${M.niv} : code${bad.length>1?'s':''} ${bad.slice(0,6).join(', ')}${bad.length>6?'…':''} absent${bad.length>1?'s':''} du dictionnaire.`);}
+    else g.forEach(c=>{if(!GEO_RX[M.niv].test(c))errs.push(`Code « ${c} » : ${GEO_EX[M.niv]} attendu pour le niveau ${M.niv}.`);});
+    if(g.length)entries.push(['GEO',g.map(c=>M.niv+'-'+c)]);
+    if(g.length>250)warns.push(`${g.length} territoires : la fonction les enverra par paquets de 250 (un appel par paquet, limite Insee de 30 appels par minute).`);
+    if(M.niv==='ARM')warns.push('Arrondissements municipaux (Paris, Lyon, Marseille) : absents du référentiel, pas de relation avec DIM_Referentiel_Geographique.');
+    if(M.niv==='IRIS')warns.push('IRIS : pas de référentiel des IRIS ici. La requête ajoute CODE_COMMUNE (5 premiers caractères) pour relier chaque IRIS à sa commune et agréger. À Paris, Lyon et Marseille, ces 5 caractères sont un arrondissement municipal, absent du référentiel.');
+  } else if(GI&&!GI.none&&GI.n<=300){
+    if(LV&&Object.keys(LV).length>1)warns.push(`Plusieurs niveaux géographiques dans ce jeu (${lvTxt(LV)}) : sans filtre, ils sont mélangés. Filtrer NIVEAU_GEO avant toute somme, ou choisir « Territoires précis ».`);
+  } else if(!(GI&&GI.none))warns.push(`Aucun filtre géographique : ${GI?GI.n+' territoires, ':''}toute la France et tous les niveaux sont téléchargés. La pagination de l’API n’est pas fiable sur un tel volume (pages dupliquées ou sautées). Préférer une liste GEO.`);
+  if(geoIsIris()&&M.geoMode==='aucun')warns.push('IRIS : la requête ajoute CODE_COMMUNE (5 premiers caractères du code IRIS) pour la relation avec le référentiel.');
+  const names=entries.map(e=>e[0]);names.forEach((n,i)=>{if(names.indexOf(n)!==i&&names.lastIndexOf(n)===i)errs.push(`${n} apparaît deux fois : regrouper les valeurs sur une seule ligne.`);});
+  if(M.filters.filter(f=>f.v.trim()&&vals(f.x).length).length===0)warns.push('Aucun filtre de variable : toutes les modalités du jeu seront chargées (plus de pages, plus d’appels).');
+  if(dicoOk()){
+    const V=dicoMap();
+    M.filters.forEach(f=>{const v=f.v.trim().toUpperCase(),x=vals(f.x);if(!v||!x.length||v==='GEO'||v==='TIME_PERIOD')return;
+      const d=V[v];if(!d){errs.push(`${v} n\u2019existe pas dans ce jeu (voir la liste des variables à l\u2019étape 2).`);return;}
+      const ok=new Set(d.vals.map(c=>c.code));const bad=x.filter(c=>!ok.has(c));
+      if(bad.length)errs.push(`${v} : code${bad.length>1?'s':''} ${bad.join(', ')} absent${bad.length>1?'s':''} du dictionnaire.`);});
+    const T=V.TIME_PERIOD;
+    if(T){const ok=new Set(T.vals.map(c=>c.code));
+      if(M.perMode==='fixe'){const bad=vals(M.per).filter(c=>!ok.has(c));if(bad.length)errs.push(`TIME_PERIOD : ${bad.slice(0,6).join(', ')}${bad.length>6?'…':''} absent${bad.length>1?'s':''} du dictionnaire.`);}
+      else if(!ok.has('2023'))warns.push('P_Millesime_RP vaut 2023 par défaut, mais ce jeu n\u2019a pas de période 2023 : saisir les périodes à l\u2019étape 1.');}
+    const filtered=new Set(M.filters.filter(f=>f.v.trim()&&vals(f.x).length).map(f=>f.v.trim().toUpperCase()));
+    DICO.vars.forEach(d=>{if(d.code==='GEO'||d.code==='TIME_PERIOD'||filtered.has(d.code)||d.vals.length<2)return;
+      warns.push(`${d.code} (${d.lib}) n\u2019est pas filtrée : ses ${d.vals.length} codes seront tous chargés${d.vals.some(c=>c.code==='_T')?', total _T et détails mélangés':''}. Ajouter un filtre à l\u2019étape 3.`);});
+  }
+  const nom=M.nom.trim();
+  if(nom&&!/^[A-Za-z_][A-Za-z0-9_]*$/.test(nom))warns.push('Nom de la requête : éviter accents, espaces et tirets (lettres, chiffres et _ seulement).');
+  return {jeu,entries,errs,warns};
+}
+function stepName(){return M.geoMode==='perim'?'#"Données du périmètre extraites"':M.geoMode==='liste'?'#"Données des territoires extraites"':'#"Données France entière extraites"';}
+function melData(){
+  const {jeu,entries}=melModel();
+  const nom=M.nom.trim();
+  const w=Math.max(...entries.map(e=>mId(e[0]).length),4);
+  const ip=irisPerim();
+  const fmt=e=>e[0]==='GEO'&&ip?'#"Territoires du périmètre"':e[1].raw?e[1].raw:mVal(e[1],16+w+3);
+  const lines=entries.map((e,i)=>`                ${mId(e[0]).padEnd(w)} = ${fmt(e)}${i<entries.length-1?',':''}`);
+  const rec=entries.length?`            [\n${lines.join('\n')}\n            ]`:'            [ ]';
+  const filt=M.filters.filter(f=>f.v.trim()&&vals(f.x).length).map(f=>f.v.trim().toUpperCase());
+  const geoTxt=M.geoMode==='perim'?(irisPerim()?'IRIS et communes non découpées du périmètre (P_Communes_Perimetre)':'communes du périmètre (P_Communes_Perimetre)'):M.geoMode==='liste'?`territoires précis (${M.niv})`:'France entière, tous niveaux';
+  const head=[];
+  if(nom)head.push(`// ${nom}`);
+  head.push(`// Jeu ${jeu} (API Melodi, Insee), filtré côté API`);
+  head.push(`// Territoire : ${geoTxt}`);
+  if(filt.length)head.push(`// Filtres : ${filt.join(', ')} (codes lus dans fn_MelodiDico)`);
+  head.push(M.lib?'// Libellés à la place des codes (3e argument true)':'// Codes conservés + colonnes LIB_<variable> pour l’affichage');
+  const s0=stepName(),iris=geoIsIris();
+  const pre=ip?`    // Périmètre IRIS : territoires publiés dans ce jeu et situés dans les communes du périmètre,
+    // lus dans le dictionnaire (IRIS, et communes non découpées en IRIS publiées au niveau COM)
+    #"Territoires du périmètre" =
+        let
+            CommunesDuPerimetre =
+                List.Buffer(List.Transform(P_Communes_Perimetre, each Text.AfterDelimiter(_, "-"))),
+            TerritoiresDuJeu =
+                Table.SelectRows(
+                    fn_MelodiDico(${mStr(jeu)}),
+                    each [VARIABLE] = "GEO"
+                         and List.Contains({"IRIS", "COM"}, [NIVEAU_GEO])
+                         and List.Contains(CommunesDuPerimetre, Text.Start([CODE], 5))
+                )
+        in
+            List.Transform(Table.ToRecords(TerritoiresDuJeu), each [NIVEAU_GEO] & "-" & [CODE]),
+
+`:'';
+  let txt=`${head.join('\n')}\n\nlet\n${pre}    ${s0} =\n        fn_MelodiData(\n            ${mStr(jeu)},\n${rec}${M.lib?',\n            true':''}\n        )`;
+  let s=s0;
+  if(iris){s='#"Code commune ajouté"';
+    txt+=`,\n\n    // IRIS : code commune = 5 premiers caractères du code IRIS (commune non découpée : code commune tel quel)\n    // Sert à la relation avec DIM_Referentiel_Geographique et à l\u2019agrégation par commune\n    ${s} =\n        Table.AddColumn(\n            ${s0},\n            "CODE_COMMUNE",\n            each if [NIVEAU_GEO] = "IRIS" then Text.Start([CODE_GEO], 5) else [CODE_GEO],\n            type text\n        )`;}
+  if(!M.slim)return txt+`\nin\n    ${s}`;
+  const kept=new Set(M.filters.filter(f=>f.v.trim()&&vals(f.x).length&&keepOf(f)).map(f=>f.v.trim().toUpperCase()));
+  const cm=M.lib?'code':(M.colsMode||'both');
+  // On retire seulement ce qui est sûr d'être inutile : une variable non filtrée reste visible (pas de double compte caché)
+  const rm=['GEO'];if(!(M.geoMode==='aucun'||(iris&&M.geoMode!=='liste')))rm.push('NIVEAU_GEO');
+  rm.push('LIB_TIME_PERIOD');
+  const drop=entries.filter(([k])=>k!=='GEO'&&k!=='TIME_PERIOD'&&!kept.has(k)).map(e=>e[0]);
+  drop.forEach(k=>rm.push(k,'LIB_'+k));
+  entries.filter(([k])=>kept.has(k)).forEach(([k])=>{if(cm==='lib')rm.push(k);if(cm==='code')rm.push('LIB_'+k);});
+  txt+=`,\n\n    // Colonnes retirées : GEO (code complet, CODE_GEO sert à la jointure)${rm.includes('NIVEAU_GEO')?', NIVEAU_GEO':''}`;
+  if(drop.length)txt+=`,\n    // variables filtrées sur un seul code (${drop.join(', ')})`;
+  if(cm!=='both'&&!M.lib)txt+=`,\n    // ${cm==='lib'?'codes':'libellés'} des variables gardées`;
+  txt+=`\n    // Une variable du jeu non filtrée reste visible : la filtrer avant toute somme`;
+  txt+=`\n    #"Colonnes inutiles retirées" =\n        Table.RemoveColumns(\n            ${s},\n            {${rm.map(mStr).join(', ')}},\n            MissingField.Ignore\n        )\nin\n    #"Colonnes inutiles retirées"`;
+  return txt;
+}
+function melDico(){
+  const j=mStr(M.jeu.trim());
+  if(!M.nogeo)return `// Dictionnaire du jeu ${M.jeu.trim()} : une ligne par code de chaque variable\nlet\n    #"Dictionnaire du jeu" = fn_MelodiDico(${j})\nin\n    #"Dictionnaire du jeu"`;
+  return `// Dictionnaire du jeu ${M.jeu.trim()} : une ligne par code de chaque variable\nlet\n    #"Dictionnaire du jeu" = fn_MelodiDico(${j}),\n\n    // GEO retirée : elle liste tous les territoires de France\n    #"Variables hors GEO conservées" =\n        Table.SelectRows(#"Dictionnaire du jeu", each [VARIABLE] <> "GEO")\nin\n    #"Variables hors GEO conservées"`;
+}
+function melUrls(){
+  const {jeu,entries}=melModel();
+  const per=M.perMode==='param'?['2023']:null;
+  const qs=entries.flatMap(([k,v])=>{
+    let tg=TEST_GEO;
+    if(k==='GEO'&&irisPerim()){const GI=geoInfo(),I=GI&&GI.lv&&GI.lv.IRIS?[...GI.lv.IRIS]:[];const pick=I.filter(c=>c.startsWith('67482')).concat(I).slice(0,3);if(pick.length)tg=pick.map(c=>'IRIS-'+c);}
+    let list=v.raw?(k==='TIME_PERIOD'?per:tg):v;
+    if(k==='GEO'&&!v.raw)list=v.slice(0,3);
+    return list.map(x=>encodeURIComponent(k)+'='+encodeURIComponent(x));}).join('&');
+  return {dico:'https://api.insee.fr/melodi/range/'+jeu,data:'https://api.insee.fr/melodi/data/'+jeu+(qs?'?'+qs:'')};
+}
+function melGuideTest(){const u=melUrls();
+  const geoNote=irisPerim()?'<p class="note">Pour le test, le périmètre est remplacé par 3 IRIS lus dans le dictionnaire. Dictionnaire non chargé : le charger d\u2019abord (étape 2), sinon l\u2019adresse de test ne contient pas de vrais codes IRIS.</p>':M.geoMode==='perim'?'<p class="note">Pour le test, <code>P_Communes_Perimetre</code> est remplacée par deux communes (Strasbourg 67482, Mulhouse 68224) : la vraie requête envoie toutes les communes du périmètre (880 pour 67 et 68) par paquets.</p>':M.geoMode==='liste'&&geoList().length>3?'<p class="note">Pour le test, seuls les 3 premiers territoires sont gardés.</p>':'';
+  const perNote=M.perMode==='param'?'<p class="note"><code>P_Millesime_RP</code> est remplacé par 2023, sa valeur par défaut.</p>':'';
+  return `<div class="links">
+    <div><h3>Les données, page 1, avec vos filtres</h3><a href="${esc(u.data)}" target="_blank" rel="noopener">${esc(u.data)}</a>
+      ${geoNote}${perNote}
+      <p class="note">Regarder <code>observations</code> : vide = un code de filtre n'existe pas. Une valeur répétée (<code>AGE=Y18&amp;AGE=Y19</code>) correspond à une liste <code>{ }</code> dans la requête.</p>
+      <div class="bar"><button data-u="data">Copier l'adresse des données</button></div></div>
+    <p class="note">Le navigateur affiche la réponse brute (XML) : chercher la balise <code>observations</code>. <code>&lt;observations/&gt;</code> vide = aucune donnée pour ces filtres. Pour lire les codes et les niveaux du jeu, utiliser plutôt « Charger le dictionnaire ici » (étape 2).</p>
+  </div>`;}
+function melGuideAide(){return `<h3>Avant de commencer</h3>
+  <ol><li>Les requêtes <code>fn_MelodiDico</code> et <code>fn_MelodiData</code> (v1.2 et v1.5) existent dans le fichier, avec ces noms exacts (onglet Fonctions).</li>
+  <li>Pour <code>GEO = P_Communes_Perimetre</code> : les requêtes <code>P_Departements_Perimetre</code>, <code>P_Chemin_Referentiel</code>, <code>DIM_Referentiel_Geographique</code> et <code>P_Communes_Perimetre</code> existent (onglet Fonctions). ; <code>P_Chemin_Referentiel</code> contient l'adresse de votre copie du référentiel, pas l'adresse d'exemple.</li></ol>
+  <h3>Si ça plante</h3>
+  <table><tr><th>Symptôme</th><th>Solution</th></tr>
+  <tr><td>Erreur « API Melodi : aucune donnée »</td><td>L'API n'a rien renvoyé. Causes, de la plus fréquente à la plus rare : le jeu n'est pas publié au niveau géographique demandé (ex. un jeu national, maille France, filtré sur des communes : choisir « Territoires précis », niveau <code>FRANCE</code>, code <code>F</code>) ; la période n'est pas encore publiée (<code>P_Millesime_RP</code> trop récent) ; un code de filtre n'existe pas ; <code>P_Departements_Perimetre</code> ne contient aucun département reconnu. Charger le dictionnaire (étape 2) : il affiche les niveaux et les codes du jeu.</td></tr>
+  <tr><td>Erreur 400, « n'existe pas »</td><td>Nom du jeu faux, ou jeu absent de l'API (certains jeux du site Insee ne sont pas diffusés par Melodi).</td></tr>
+  <tr><td><code>Expression.Error</code> : nom introuvable</td><td>Une fonction ou un paramètre manque, ou n'a pas le nom exact (<code>fn_MelodiDico</code>, <code>fn_MelodiData</code>, <code>P_Millesime_RP</code>, <code>P_Departements_Perimetre</code>, <code>P_Chemin_Referentiel</code>, <code>DIM_Referentiel_Geographique</code>, <code>P_Communes_Perimetre</code>).</td></tr>
+  <tr><td>Erreur 429, ou actualisation très longue</td><td>Plus de 30 appels par minute. La fonction fait déjà une pause et réessaie 3 fois ; si l'erreur persiste : attendre une minute, ajouter des filtres de variables, ou réduire les départements de <code>P_Departements_Perimetre</code> (la France entière représente environ 140 paquets de communes).</td></tr>
+  <tr><td>Accès refusé (Formula.Firewall ou confidentialité)</td><td>Transformer les données → Paramètres de la source de données : <b>le même niveau de confidentialité</b> pour api.insee.fr et pour la source du référentiel. Référentiel sur SharePoint ou OneDrive : « Organisationnel » pour les deux. Référentiel sur GitHub : « Public » pour les deux. Les codes de communes envoyés à l'Insee sont des données publiques.</td></tr>
+  <tr><td>Codes au lieu des libellés</td><td>Normal avec le choix recommandé : les libellés sont dans les colonnes <code>LIB_…</code>. Sinon choisir « Libellés à la place des codes ».</td></tr>
+  <tr><td>Communes absentes après la jointure</td><td>Joindre sur <code>CODE_GEO</code> (code sans le millésime ni le niveau), pas sur <code>GEO</code> (« 2026-COM-67482 »).</td></tr>
+  <tr><td>Doublons ou lignes manquantes</td><td>Requête sans filtre GEO : la pagination n'est pas fiable sur gros volume. Passer une liste GEO.</td></tr>
+  <tr><td>Référentiel inaccessible</td><td>Le paramètre <code>P_Chemin_Referentiel</code> contient encore l'adresse d'exemple, ou un lien de partage. Il faut le <b>lien direct vers le fichier</b> : dans Excel (application de bureau), Fichier → Informations → Copier le chemin d'accès, puis retirer la fin « ?web=1 » si elle apparaît. Connexion : compte d'organisation pour SharePoint ou OneDrive, Anonyme pour GitHub.</td></tr>
+  <tr><td>Service Power BI : identifiants impossibles à enregistrer pour api.insee.fr</td><td>Paramètres du modèle sémantique → Informations d'identification : Anonyme, et cocher « Ignorer le test de connexion » (la racine du site de l'API ne répond pas au test). Aucune passerelle n'est nécessaire, sauf si le référentiel est un fichier sur le poste.</td></tr></table>
+  <h3>Pièges</h3>
+  <ol><li><b>Totaux mélangés aux détails</b> : <code>_T</code> = total, <code>1T2</code> = 1 + 2. Une seule modalité par variable avant de sommer.</li>
+  <li><b>Plusieurs fréquences dans un même jeu</b> : si le dictionnaire contient <code>FREQ</code> (A annuel, M mensuel, D journalier…), en filtrer une seule, sinon les mêmes décès ou événements sont comptés plusieurs fois.</li>
+  <li><b>TIME_PERIOD hors recensement</b> : <code>P_Millesime_RP</code> ne vaut que pour les jeux DS_RP_. Pour les autres, saisir les codes de période lus dans le dictionnaire.</li>
+  <li><b>Croisement sans effectif absent</b> : une combinaison nulle peut ne pas être renvoyée. La traiter comme 0.</li>
+  <li><b>Valeurs décimales</b> : estimations du recensement, à n'arrondir qu'à l'affichage.</li>
+  <li><b>Niveaux géographiques</b> : un jeu n'est publié qu'à certains niveaux (France, département, commune, IRIS…), visibles dans le dictionnaire chargé ou dans l'onglet Métadonnées du catalogue Insee (« Maille(s) géographique(s) »). L'explorateur, lui, n'affiche par défaut qu'un niveau. Le périmètre de communes ne sert qu'aux jeux communaux.</li>
+  <li><b>IRIS</b> : pas de référentiel des IRIS ici. Le code commune est formé des 5 premiers caractères du code IRIS : la requête ajoute <code>CODE_COMMUNE</code> pour relier au référentiel et agréger par commune, EPCI, département.</li>
+  <li><b>Ne plus filtrer après téléchargement</b> : l'ancien modèle (France entière puis <code>Table.SelectRows</code>) est remplacé par <code>GEO = …</code> dans les filtres.</li></ol>`;}
+const keepOf=f=>typeof f.keep==='boolean'?f.keep:vals(f.x).length>1;
+/* ---- dictionnaire lu en direct ---- */
+let DICO={jeu:null,status:'',vars:null,err:''};const dicoOpen=new Set();
+const dicoOk=()=>DICO.status==='ok'&&DICO.jeu===M.jeu.trim();
+const dicoMap=()=>Object.fromEntries(DICO.vars.map(v=>[v.code,v]));
+async function loadDico(){
+  const jeu=M.jeu.trim();
+  if(!/^DS_[A-Z0-9_]+$/.test(jeu)){toast('Saisir d\u2019abord le nom du jeu');return;}
+  DICO={jeu,status:'load',vars:null,err:'',geo:null};renderDico();
+  try{
+    const r=await fetch('https://api.insee.fr/melodi/range/'+encodeURIComponent(jeu));
+    if(!r.ok)throw new Error(r.status===400||r.status===404?'jeu introuvable (erreur '+r.status+') : vérifier le nom':'erreur '+r.status+(r.status===429?' : plus de 30 appels par minute, attendre':''));
+    const d=await r.json();
+    const list=Array.isArray(d)?d:(Array.isArray(d.range)?d.range:Object.values(d).find(Array.isArray));
+    if(!list)throw new Error('réponse inattendue de l\u2019API');
+    const fr=l=>l&&typeof l==='object'?(l.fr||l.en||''):(l||'');
+    // Valeur GEO du dictionnaire : { code: "2A117", type: { code: "COM" }, id: "2026-COM-2A117" }
+    const geoVal=v=>{const c=String(v.code),t=v.type,m=String(v.id||'').match(/^(\d{4})-([A-Z][A-Z0-9]*)-(.+)$/);
+      let lvl=t&&typeof t==='object'?t.code:(typeof t==='string'?t:null);if(!lvl&&m)lvl=m[2];
+      return {code:c,lib:fr(v.label),lvl:lvl?String(lvl).toUpperCase():null,c,yr:m?m[1]:null};};
+    DICO.vars=list.map(x=>{const code=String(x.concept&&x.concept.code||'');return {code,lib:fr(x.concept&&x.concept.label),vals:(x.values||[]).map(v=>code==='GEO'?geoVal(v):({code:String(v.code),lib:fr(v.label)}))};}).filter(v=>v.code);
+    DICO.status='ok';
+  }catch(e){DICO.status='err';DICO.err=e&&e.message||String(e);if(e instanceof TypeError)DICO.err='appel bloqué par le navigateur ou le réseau ('+DICO.err+'). Utiliser la requête Power Query du dictionnaire.';}
+  if(DICO.jeu!==M.jeu.trim())return;
+  if(DICO.status==='ok'){const V=dicoMap();
+    const gone=M.filters.filter(f=>{const v=f.v.trim().toUpperCase();return v&&v!=='GEO'&&v!=='TIME_PERIOD'&&!V[v];}).map(f=>f.v.trim().toUpperCase());
+    if(gone.length){M.filters=M.filters.filter(f=>!gone.includes(f.v.trim().toUpperCase()));if(!M.filters.length)M.filters=[{v:'',x:''}];melSave();
+      toast(`Filtre${gone.length>1?'s':''} retiré${gone.length>1?'s':''}, absent${gone.length>1?'s':''} de ce jeu : ${gone.join(', ')}`);}}
+  renderDico();melRenderFilters();melRenderOut();
+}
+function renderDico(){
+  const box=document.getElementById('dico-box');
+  if(!DICO.status){box.innerHTML='<p class="note">« Charger le dictionnaire ici » lit les variables et les codes directement à l\u2019Insee : les codes deviennent cliquables à l\u2019étape 3 et les variables non filtrées sont signalées.</p>';return;}
+  if(DICO.status==='load'){box.innerHTML='<p class="note">Lecture du dictionnaire de '+esc(DICO.jeu)+'…</p>';return;}
+  if(DICO.status==='err'){box.innerHTML='<div class="alert">Dictionnaire non chargé : '+esc(DICO.err)+'</div>';return;}
+  if(DICO.jeu!==M.jeu.trim()){box.innerHTML='<div class="alert">Le dictionnaire affiché est celui de '+esc(DICO.jeu)+'. Recharger pour '+esc(M.jeu.trim()||'le nouveau jeu')+'.</div>';return;}
+  const filt=new Set(M.filters.filter(f=>f.v.trim()&&vals(f.x).length).map(f=>f.v.trim().toUpperCase()));
+  const st=v=>v.code==='GEO'?'<span class="st-na">étape 4</span>':v.code==='TIME_PERIOD'?`<span class="st-na">étape 1 · ${esc(v.vals.length?v.vals[0].code+(v.vals.length>1?' … '+v.vals[v.vals.length-1].code:''):'')}</span>`:filt.has(v.code)?'<span class="st-ok">✓ filtrée</span>':v.vals.length<2?'<span class="st-na">un seul code</span>':'<span class="st-no">non filtrée</span>';
+  const act=v=>v.code==='GEO'||v.code==='TIME_PERIOD'||M.filters.some(f=>f.v.trim().toUpperCase()===v.code)?'':`<button class="ghost" data-addvar="${esc(v.code)}">+ Filtrer</button>`;
+  const GI=geoInfo();
+  const geoP=GI.none?'<p class="note">Pas de variable GEO : jeu sans dimension géographique.</p>':GI.lv?`<p class="note"><b>Niveaux géographiques du jeu</b>${GI.yr?` (géographie au 1er janvier ${esc(GI.yr)})`:''} : ${esc(lvTxt(GI.lv))}${GI.lv.COM?'':' — <b>pas de niveau commune</b> : utiliser « Territoires précis » à l\u2019étape 4.'}</p>`:'<p class="note">Niveaux géographiques non reconnus dans la variable GEO : les lire dans l\u2019onglet Métadonnées du catalogue Insee, « Maille(s) géographique(s) ».</p>';
+  box.innerHTML=`<p class="okmsg" style="margin:0">${esc(DICO.jeu)} : ${DICO.vars.length} variables lues à l\u2019Insee.</p>${geoP}
+  <div class="dico-scroll"><table><tr><th>Variable</th><th>Libellé</th><th>Codes</th><th>État</th><th></th></tr>
+  ${DICO.vars.map(v=>`<tr><td class="mono">${esc(v.code)}</td><td>${esc(v.lib)}</td><td>${v.vals.length}</td><td>${st(v)}</td><td>${act(v)}</td></tr>`).join('')}</table></div>`;
+}
+function chipsFor(f){
+  if(!dicoOk())return'';const v=f.v.trim().toUpperCase();const d=dicoMap()[v];if(!d||v==='GEO')return'';
+  const sel=new Set(vals(f.x));const max=300;
+  return `<details class="codes" data-var="${esc(v)}"${dicoOpen.has(v)?' open':''}><summary>Codes disponibles (${d.vals.length}) : cliquer pour ajouter ou retirer</summary><div class="chips">${d.vals.slice(0,max).map(c=>`<button type="button" data-code="${esc(c.code)}" class="${sel.has(c.code)?'on':''}" title="${esc(c.lib)}">${esc(c.code)}<span>${esc(c.lib)}</span></button>`).join('')}</div>${d.vals.length>max?`<p class="note">${max} premiers codes affichés sur ${d.vals.length}.</p>`:''}</details>`;
+}
+function melRenderFilters(){
+  document.getElementById('mel-filters').innerHTML=M.filters.map((f,i)=>`<div class="frow" data-i="${i}">
+    <label for="mf-v${i}">Variable<input type="text" id="mf-v${i}" class="mono" data-k="v" value="${esc(f.v)}" placeholder="AGE" spellcheck="false" autocomplete="off"></label>
+    <label for="mf-x${i}">Code(s)<input type="text" id="mf-x${i}" class="mono" data-k="x" value="${esc(f.x)}" placeholder="Y18, Y19, _T" spellcheck="false" autocomplete="off"></label>
+    <label class="check" title="Garder cette colonne quand « colonnes utiles » est coché"><input type="checkbox" data-k="keep" ${keepOf(f)?'checked':''}>Colonne gardée</label>
+    <button class="ghost" data-delf title="Supprimer ce filtre">Supprimer</button>${chipsFor(f)}</div>`).join('')||'<p class="note">Aucun filtre.</p>';
+}
+const HOW={
+  dico:'<b>Coller le dictionnaire</b><ol><li>Accueil → Transformer les données.</li><li>Accueil → Nouvelle source → Requête vide → Éditeur avancé.</li><li>Tout remplacer par ce code, puis OK.</li><li>Filtrer la colonne <span class="mono">VARIABLE</span> (ex. AGE) et lire les codes dans <span class="mono">CODE</span>.</li></ol><p class="note">Requête de consultation : clic droit → décocher « Activer le chargement ».</p>',
+  data:'<b>Coller la requête</b><ol><li>Accueil → Transformer les données.</li><li>Accueil → Nouvelle source → Requête vide → Éditeur avancé.</li><li>Tout remplacer par ce code, puis OK.</li><li>Renommer la requête avec le nom choisi à l’étape 5.</li><li>Relier à <span class="mono">DIM_Referentiel_Geographique</span> par <span class="mono">CODE_GEO</span> → <span class="mono">Code commune historique</span>.</li></ol>',
+  fn:'<b>Coller les 7 requêtes, une fois par fichier</b><ol><li>Accueil → Transformer les données → Nouvelle source → Requête vide → Éditeur avancé.</li><li>Tout remplacer par le code, puis OK.</li><li>Renommer la requête exactement comme dans la liste (ex. <span class="mono">fn_MelodiDico</span>), sans le numéro.</li><li>Clic droit sur la requête › Propriétés › Description : coller le texte affiché dans le cadre bleu, juste au-dessus du code (il apparaît ensuite en info-bulle dans le volet des requêtes).</li><li>Recommencer pour les requêtes 2 à 7, dans l\u2019ordre.</li></ol><p class="note">Inutile si le rapport a été créé à partir du modèle <span class="mono">Modele_API_Melodi.pbit</span> : les 7 requêtes y sont déjà.</p><p class="note">Ensuite : Accueil → Gérer les paramètres → <span class="mono">P_Chemin_Referentiel</span> = adresse de votre copie du référentiel. À la première actualisation : Anonyme pour api.insee.fr, compte d\u2019organisation pour SharePoint ou OneDrive, et le même niveau de confidentialité pour les deux sources.</p>'
+};
+function melRenderOut(){
+  renderDico();
+  const {errs,warns}=melModel();
+  const msgs=document.getElementById('mel-msgs');
+  msgs.innerHTML=errs.map(e=>`<div class="alert">À corriger : ${esc(e)}</div>`).join('')+warns.map(w=>`<div class="note">⚠️ ${esc(w)}</div>`).join('')+(!errs.length&&!warns.length&&mtab==='data'?'<div class="okmsg">Requête prête : filtres envoyés à l’API, aucun filtrage après téléchargement.</div>':'');
+  document.getElementById('per-opts').hidden=M.perMode!=='fixe';
+  {const el=document.getElementById('per-codes'),T=dicoOk()&&dicoMap().TIME_PERIOD;
+    if(!T){el.innerHTML='';}
+    else{const sel=new Set(M.perMode==='fixe'?vals(M.per):[]),cs=T.vals.map(c=>c.code),max=60,shown=cs.slice(-max);
+      el.innerHTML=`<details class="codes" open><summary>Périodes du jeu (${cs.length}) : ${esc(cs[0])}${cs.length>1?' … '+esc(cs[cs.length-1]):''}. Cliquer pour les choisir</summary><div class="chips">${shown.map(c=>`<button type="button" data-per="${esc(c)}" class="${sel.has(c)?'on':''}">${esc(c)}</button>`).join('')}</div>${cs.length>max?`<p class="note">${max} dernières périodes affichées sur ${cs.length}.</p>`:''}</details>`;}}
+  document.getElementById('geo-liste').hidden=M.geoMode!=='liste';
+  document.getElementById('slim-opts').hidden=!M.slim||M.lib;
+  document.getElementById('mel-geo-note').textContent=`Format attendu : ${GEO_EX[M.niv]}. Le préfixe ${M.niv}- est ajouté pour vous.`;
+  {const GI=geoInfo(),LV=GI&&GI.lv,set=LV&&LV[M.niv],el=document.getElementById('mel-geo-codes');
+    el.textContent=set?`Codes ${M.niv} du jeu (${set.size}) : ${[...set].slice(0,15).join(', ')}${set.size>15?'…':''}`:'';el.hidden=!set;
+    document.querySelectorAll('#mel-niv option').forEach(o=>{o.dataset.t=o.dataset.t||o.textContent;o.textContent=o.dataset.t+(LV?(LV[o.value]?` — ${LV[o.value].size}`:' — absent du jeu'):'');});}
+  const pc=document.getElementById('mel-pane-code'),pg=document.getElementById('mel-pane-guide'),how=document.getElementById('mel-how'),pick=document.getElementById('fn-pick');
+  how.innerHTML=mtab==='data'?HOW.data.replace(/<li>Relier[\s\S]*?<\/li>/,'<li>'+joinTip()+'</li>'):(HOW[mtab]||'');how.hidden=!HOW[mtab];
+  if(mtab==='test'||mtab==='aide'){pc.hidden=true;pg.hidden=false;pg.innerHTML=mtab==='test'?melGuideTest():melGuideAide();return;}
+  pc.hidden=false;pg.hidden=true;pick.hidden=mtab!=='fn';
+  const code=document.getElementById('mel-code'),hint=document.getElementById('mel-hint'),fd=document.getElementById('fn-desc');fd.hidden=true;
+  if(mtab==='data'){code.textContent=melData();hint.textContent='Requête de données (fn_MelodiData v1.5)';}
+  else if(mtab==='dico'){code.textContent=melDico();hint.textContent='Requête du dictionnaire (fn_MelodiDico)';}
+  else{code.textContent=FN[fnSel];hint.textContent=FN_INFO[fnSel].dep;
+    fd.innerHTML=`<div><b>Texte à coller dans Propriétés › Description</b> (clic droit sur la requête <span class="mono">${esc(fnSel)}</span> dans Power Query)<br>${esc(FN_INFO[fnSel].desc)}</div><button data-copydesc>Copier la description</button>`;fd.hidden=false;}
+}
+// Consigne de relation avec le référentiel selon le niveau géographique des données
+function joinTip(){
+  const R='<span class="mono">DIM_Referentiel_Geographique</span>';
+  if(geoIsIris())return `Relier à ${R} par <span class="mono">CODE_COMMUNE</span> → <span class="mono">Code commune historique</span>. Les noms d\u2019IRIS ne sont pas dans le référentiel.`;
+  if(M.geoMode==='perim'||(M.geoMode==='liste'&&M.niv==='COM'))return `Relier à ${R} par <span class="mono">CODE_GEO</span> → <span class="mono">Code commune historique</span>.`;
+  if(M.geoMode==='aucun')return 'Sans filtre, plusieurs niveaux peuvent être mélangés : filtrer <span class="mono">NIVEAU_GEO</span> avant toute relation ou somme.';
+  const n=M.niv;
+  if(n==='FRANCE')return 'Données nationales : aucune relation avec le référentiel.';
+  if(n==='ARM')return 'Arrondissements municipaux : absents du référentiel, pas de relation.';
+  if(REF_COL[n])return `<span class="mono">CODE_GEO</span> contient des codes ${n} : pas de relation directe avec ${R} (une ligne par commune). Pour les libellés, créer une table des ${n} à partir des colonnes « ${REF_COL[n]} » et libellé correspondant du référentiel (doublons supprimés), puis relier par <span class="mono">CODE_GEO</span>.`;
+  return `Niveau ${n} absent du référentiel : pas de relation, libellés à lire dans le dictionnaire (variable GEO).`;
+}
+function setTab(t){mtab=t;document.querySelectorAll('#mel-tabs [role=tab]').forEach(x=>x.setAttribute('aria-selected',x.dataset.mtab===t));melRenderOut();}
+function melBind(){
+  document.getElementById('mel-jeu').value=M.jeu;document.getElementById('mel-per').value=M.per;
+  nomInit();document.getElementById('mel-niv').value=M.niv;document.getElementById('mel-geo').value=M.geo;document.getElementById('mel-nom').value=M.nom;
+  document.getElementById('mel-nogeo').checked=!!M.nogeo;document.getElementById('mel-slim').checked=!!M.slim;document.getElementById('mel-cols').value=M.colsMode||'both';
+  document.querySelectorAll('input[name=per]').forEach(r=>r.checked=r.value===M.perMode);
+  document.querySelectorAll('input[name=geo]').forEach(r=>r.checked=r.value===M.geoMode);
+  document.querySelectorAll('input[name=lib]').forEach(r=>r.checked=r.value===(M.lib?'1':'0'));
+  melRenderFilters();melRenderOut();
+}
+const upd=()=>{melRenderOut();melSave();};
+[['mel-jeu','jeu'],['mel-per','per'],['mel-geo','geo'],['mel-nom','nom']].forEach(([id,k])=>document.getElementById(id).addEventListener('input',e=>{
+  if(id==='mel-jeu'){const p=e.target.selectionStart;e.target.value=e.target.value.toUpperCase();e.target.setSelectionRange(p,p);}
+  M[k]=e.target.value;
+  if(id==='mel-nom')M.nomJeu=M.jeu;
+  if(id==='mel-jeu'&&M.nom&&M.nomJeu!==M.jeu){M.nom='';document.getElementById('mel-nom').value='';}
+  upd();}));
+document.getElementById('mel-niv').addEventListener('change',e=>{M.niv=e.target.value;upd();});
+document.getElementById('per-codes').addEventListener('click',e=>{const b=e.target.closest('[data-per]');if(!b)return;
+  const c=b.dataset.per,cur=M.perMode==='fixe'?vals(M.per):[];const nx=cur.includes(c)?cur.filter(x=>x!==c):cur.concat(c);
+  M.perMode='fixe';M.per=nx.join(', ');document.getElementById('mel-per').value=M.per;document.querySelectorAll('input[name=per]').forEach(r=>r.checked=r.value==='fixe');upd();});
+document.getElementById('per-fill').onclick=()=>{
+  const a=document.getElementById('per-de').value,b=document.getElementById('per-a').value;
+  if(!a||!b){toast('Choisir le premier et le dernier mois');return;}
+  let [y,m]=a.split('-').map(Number);const [y2,m2]=b.split('-').map(Number);
+  if(y*12+m>y2*12+m2){toast('Le premier mois est après le dernier');return;}
+  const L=[];while(y*12+m<=y2*12+m2&&L.length<240){L.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}
+  M.perMode='fixe';M.per=L.join(', ');melBind();melSave();toast(L.length+' mois ajoutés');};
+document.getElementById('mel-nogeo').addEventListener('change',e=>{M.nogeo=e.target.checked;upd();});
+document.getElementById('mel-slim').addEventListener('change',e=>{M.slim=e.target.checked;upd();});
+document.getElementById('mel-cols').addEventListener('change',e=>{M.colsMode=e.target.value;upd();});
+document.querySelectorAll('input[name=per]').forEach(r=>r.addEventListener('change',()=>{M.perMode=r.value;upd();}));
+document.querySelectorAll('input[name=geo]').forEach(r=>r.addEventListener('change',()=>{M.geoMode=r.value;upd();}));
+document.querySelectorAll('input[name=lib]').forEach(r=>r.addEventListener('change',()=>{M.lib=r.value==='1';upd();}));
+document.getElementById('mel-filters').addEventListener('input',e=>{const r=e.target.closest('.frow');if(!r)return;const k=e.target.dataset.k;
+  if(k==='v'){const p=e.target.selectionStart;e.target.value=e.target.value.toUpperCase();e.target.setSelectionRange(p,p);}
+  const f=M.filters[+r.dataset.i];
+  if(k==='keep')f.keep=e.target.checked;else{f[k]=e.target.value;if(k==='x'&&typeof f.keep!=='boolean'){const c=r.querySelector('[data-k=keep]');if(c)c.checked=keepOf(f);}}
+  if(dicoOk()&&k!=='keep'){const old=r.querySelector('.codes'),h=chipsFor(f);if(old)old.outerHTML=h;else if(h)r.insertAdjacentHTML('beforeend',h);}
+  upd();});
+document.getElementById('mel-filters').addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||!d.dataset.var)return;if(d.open)dicoOpen.add(d.dataset.var);else dicoOpen.delete(d.dataset.var);},true);
+document.getElementById('mel-filters').addEventListener('click',e=>{const chip=e.target.closest('[data-code]');
+  if(chip){const i=+chip.closest('.frow').dataset.i,f=M.filters[i],c=chip.dataset.code,list=vals(f.x);
+    const j=list.indexOf(c);if(j>=0)list.splice(j,1);else list.push(c);f.x=list.join(', ');melRenderFilters();upd();return;}
+  if(!e.target.hasAttribute('data-delf'))return;M.filters.splice(+e.target.closest('.frow').dataset.i,1);melRenderFilters();upd();});
+document.getElementById('mel-add').onclick=()=>{M.filters.push({v:'',x:''});melRenderFilters();upd();document.getElementById('mf-v'+(M.filters.length-1)).focus();};
+document.getElementById('mel-ex').addEventListener('change',e=>{if(!e.target.value)return;M=JSON.parse(JSON.stringify(MEL_EX[e.target.value]));e.target.value='';melBind();melSave();toast('Exemple chargé');});
+document.querySelectorAll('#mel-tabs [role=tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.mtab));
+document.getElementById('go-dico').onclick=()=>setTab('dico');
+document.getElementById('go-data').onclick=()=>{setTab('data');document.getElementById('mel-tabs').scrollIntoView({behavior:'smooth',block:'start'});};
+document.getElementById('go-fn').onclick=()=>{setTab('fn');document.getElementById('mel-tabs').scrollIntoView({behavior:'smooth',block:'start'});};
+document.getElementById('dico-load').onclick=loadDico;
+document.getElementById('dico-box').addEventListener('click',e=>{const v=e.target.dataset.addvar;if(!v)return;
+  const empty=M.filters.findIndex(f=>!f.v.trim()&&!f.x.trim());
+  if(empty>=0)M.filters[empty].v=v;else M.filters.push({v,x:''});dicoOpen.add(v);melRenderFilters();upd();
+  const i=M.filters.findIndex(f=>f.v===v);const el=document.getElementById('mf-x'+i);if(el)el.focus();});
+const pick=document.getElementById('fn-pick');
+pick.innerHTML=Object.keys(FN_INFO).map(k=>`<option value="${k}">${esc(FN_INFO[k].lib)}</option>`).join('');
+pick.onchange=()=>{fnSel=pick.value;melRenderOut();};
+document.getElementById('fn-desc').addEventListener('click',e=>{if(e.target.hasAttribute('data-copydesc'))copyAny(FN_INFO[fnSel].desc);});
+document.getElementById('mel-copy').onclick=()=>copyAny(document.getElementById('mel-code').textContent);
+document.getElementById('mel-pane-guide').addEventListener('click',e=>{if(e.target.dataset.u)copyAny(melUrls()[e.target.dataset.u]);});
+melLoad();melBind();
+/* ---- navigation Accueil / outils ---- */
+const VKEY='generateur-api-vue';
+function showView(v){
+  document.getElementById('view-home').hidden=v!=='home';document.getElementById('tool-mel').hidden=v!=='mel';
+  document.querySelectorAll('.toolnav [data-tool]').forEach(b=>b.setAttribute('aria-current',b.dataset.tool===v?'page':'false'));
+}
+document.querySelectorAll('.toolnav [data-tool]').forEach(b=>b.onclick=()=>showView(b.dataset.tool));
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-goto]');if(g){showView(g.dataset.goto);window.scrollTo(0,0);return;}
+  const a=e.target.closest('[data-goto-anchor]');if(a){document.getElementById(a.dataset.gotoAnchor).scrollIntoView({behavior:'smooth'});return;}
+  const f=e.target.closest('[data-goto-fn]');if(f){showView('mel');fnSel=f.dataset.gotoFn;document.getElementById('fn-pick').value=fnSel;setTab('fn');document.getElementById('mel-tabs').scrollIntoView({behavior:'smooth',block:'start'});}
+});
+// Ouverture toujours sur l'accueil ; les choix du formulaire Melodi restent mémorisés
+try{localStorage.removeItem(VKEY)}catch(e){}
+showView('home');
+</script>
+
+</body>
+</html>
