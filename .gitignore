@@ -1,0 +1,12 @@
+# Fichiers de travail : ne jamais les versionner par erreur
+*.zip
+*.pbix
+*.pbit
+~$*
+
+# Exception : le modèle publié
+!modele/Modele_API_Melodi.pbit
+
+# Système
+.DS_Store
+Thumbs.db
